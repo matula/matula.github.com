@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Shakespearean Insult Kit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body, html {
+            height: 100%;
+            width: 100%;
+            background-color: rgb(232, 232, 232);
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+        .vertical-center {
+            min-height: 100%;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(to bottom, #f5f5f5, #f5f2e9);
+            padding: 30px;
+        }
+        #insult {
+            cursor: pointer;
+            font-size: 28px;
+            font-weight: 200;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+<div class="vertical-center">
+    <div id="insult"></div>
+</div>
+
+<script>
+    const c1 = [
+        "artless",
+        "bawdy",
+        "beslubbering",
+        "bootless",
+        "churlish",
+        "cockered",
+        "clouted",
+        "craven",
+        "currish",
+        "dankish",
+        "dissembling",
+        "droning",
+        "errant",
+        "fawning",
+        "fobbing",
+        "froward",
+        "frothy",
+        "gleeking",
+        "goatish",
+        "gorbellied",
+        "impertinent",
+        "infectious",
+        "jarring",
+        "loggerheaded",
+        "lumpish",
+        "mammering",
+        "mangled",
+        "mewling",
+        "paunchy",
+        "pribbling",
+        "puking",
+        "puny",
+        "qualling",
+        "rank",
+        "reeky",
+        "roguish",
+        "ruttish",
+        "saucy",
+        "spleeny",
+        "spongy",
+        "surly",
+        "tottering",
+        "unmuzzled",
+        "vain",
+        "venomed",
+        "villainous",
+        "warped",
+        "wayward",
+        "weedy",
+        "yeasty",
+        "cullionly",
+        "fusty",
+        "caluminous",
+        "wimpled",
+        "burly-boned",
+        "misbegotten",
+        "odiferous",
+        "poisonous",
+        "fishified",
+        "wart-necked",
+    ];
+
+    const c2 = [
+        "base-court",
+        "bat-fowling",
+        "beef-witted",
+        "beetle-headed",
+        "boil-brained",
+        "clapper-clawed",
+        "clay-brained",
+        "common-kissing",
+        "crook-pated",
+        "dismal-dreaming",
+        "dizzy-eyed",
+        "doghearted",
+        "dread-bolted",
+        "earth-vexing",
+        "elf-skinned",
+        "fat-kidneyed",
+        "fen-sucked",
+        "flap-mouthed",
+        "fly-bitten",
+        "folly-fallen",
+        "fool-born",
+        "full-gorged",
+        "guts-griping",
+        "half-faced",
+        "hasty-witted",
+        "hedge-born",
+        "hell-hated",
+        "idle-headed",
+        "ill-breeding",
+        "ill-nurtured",
+        "knotty-pated",
+        "milk-livered",
+        "motley-minded",
+        "onion-eyed",
+        "plume-plucked",
+        "pottle-deep",
+        "pox-marked",
+        "reeling-ripe",
+        "rough-hewn",
+        "rude-growing",
+        "rump-fed",
+        "shard-borne",
+        "sheep-biting",
+        "spur-galled",
+        "swag-bellied",
+        "tardy-gaited",
+        "tickle-brained",
+        "toad-spotted",
+        "unchin-snouted",
+        "weather-bitten",
+        "whoreson",
+        "malmsey-nosed",
+        "rampallian",
+        "lily-livered",
+        "scurvy-valiant",
+        "brazen-faced",
+        "unwash'd",
+        "bunch-back'd",
+        "leaden-footed",
+        "muddy-mettled",
+        "pigeon-liver'd",
+        "scale-sided"
+    ];
+
+    const c3 = [
+        "apple-john",
+        "baggage",
+        "barnacle",
+        "bladder",
+        "boar-pig",
+        "bugbear",
+        "bum-bailey",
+        "canker-blossom",
+        "clack-dish",
+        "clotpole",
+        "coxcomb",
+        "codpiece",
+        "death-token",
+        "dewberry",
+        "flap-dragon",
+        "flax-wench",
+        "flirt-gill",
+        "foot-licker",
+        "fustilarian",
+        "giglet",
+        "gudgeon",
+        "haggard",
+        "harpy",
+        "hedge-pig",
+        "horn-beast",
+        "hugger-mugger",
+        "joithead",
+        "lewdster",
+        "lout",
+        "maggot-pie",
+        "malt-worm",
+        "mammet",
+        "measle",
+        "minnow",
+        "miscreant",
+        "moldwarp",
+        "mumble-news",
+        "nut-hook",
+        "pigeon-egg",
+        "pignut",
+        "puttock",
+        "pumpion",
+        "ratsbane",
+        "scut",
+        "skainsmate",
+        "strumpet",
+        "varlot",
+        "vassal",
+        "whey-face",
+        "wagtail",
+        "knave",
+        "blind-worm",
+        "popinjay",
+        "scullian",
+        "jolt-head",
+        "malcontent",
+        "devil-monk",
+        "toad",
+        "rascal",
+        "Basket-Cockle"
+    ];
+
+    // Helper function to get a random element from an array
+    function getRandomElement(array) {
+        return array[Math.floor(Math.random() * array.length)];
+    }
+
+    // Function to generate and display a new insult
+    function makeInsult() {
+        document.getElementById('insult').textContent = "Thou " + getRandomElement(c1) + ", " + getRandomElement(c2) + " " + getRandomElement(c3);
+    }
+
+    // Initialize when the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        makeInsult();
+        document.getElementById('insult').addEventListener('click', makeInsult);
+    });
+</script>
+</body>
+</html>

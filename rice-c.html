@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RICE-C Score Calculator</title>
+    <style>
+        /* General Styling */
+        :root {
+            --bg-color: #f1f5f9;
+            --card-bg-color: #ffffff;
+            --text-color-primary: #1e293b;
+            --text-color-secondary: #475569;
+            --text-color-light: #94a3b8;
+            --border-color: #e2e8f0;
+            --accent-color: #6d28d9; /* Switched to purple for distinction */
+            --accent-color-text: #ffffff;
+            --hover-border-color: #6b7280;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        /* Main Container */
+        .container {
+            width: 100%;
+            max-width: 64rem; /* 1024px */
+            background-color: var(--card-bg-color);
+            border-radius: 0.75rem; /* 12px */
+            box-shadow: 0 10px 15px -3px var(--shadow-color), 0 4px 6px -2px var(--shadow-color);
+            padding: 2.5rem;
+            box-sizing: border-box;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .header h1 {
+            font-size: 2.25rem; /* 36px */
+            font-weight: 700;
+            margin: 0;
+        }
+        .header p {
+            margin-top: 0.5rem;
+            color: var(--text-color-secondary);
+        }
+
+        /* Task Input */
+        .task-input-group {
+            margin-bottom: 2rem;
+        }
+        .task-input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .task-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .task-input:focus {
+            outline: 2px solid var(--accent-color);
+            border-color: transparent;
+        }
+
+        /* Calculator Grid */
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        @media (min-width: 1024px) {
+            .calculator-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .input-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Form Sections */
+        .form-section h2 {
+            font-size: 1.25rem; /* 20px */
+            font-weight: 600;
+            margin: 0 0 0.25rem 0;
+        }
+        .form-section p {
+            font-size: 0.875rem; /* 14px */
+            color: var(--text-color-secondary);
+            margin: 0 0 0.75rem 0;
+        }
+        .options-grid {
+            display: grid;
+            gap: 0.5rem;
+        }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        @media (min-width: 640px) {
+            .sm-grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+            .sm-grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+            .sm-grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        }
+
+
+        /* Custom Radio Buttons */
+        .radio-option input[type="radio"] {
+            display: none;
+        }
+        .radio-option label {
+            display: block;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+        .radio-option label:hover {
+            border-color: var(--hover-border-color);
+        }
+        .radio-option input[type="radio"]:checked + label {
+            background-color: var(--accent-color);
+            color: var(--accent-color-text);
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 6px -1px var(--shadow-color);
+        }
+
+        /* Score Display */
+        .score-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            min-height: 250px;
+        }
+        .score-title {
+            font-size: 1.125rem; /* 18px */
+            font-weight: 500;
+            color: var(--text-color-secondary);
+        }
+        .score-display {
+            margin: 1rem 0;
+            font-size: 4.5rem; /* 72px */
+            font-weight: 700;
+            color: var(--text-color-primary);
+            transition: all 0.3s ease-in-out;
+        }
+        .score-display.calculated {
+            transform: scale(1.1);
+            color: var(--accent-color);
+        }
+        .score-formula {
+            color: var(--text-color-light);
+            font-size: 0.875rem;
+            height: 1rem;
+        }
+        .score-summary {
+            margin-top: 1rem;
+            font-weight: 500;
+            color: var(--text-color-secondary);
+            height: 2rem;
+        }
+        .reset-button {
+            margin-top: auto;
+            background-color: #e2e8f0;
+            color: var(--text-color-secondary);
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .reset-button:hover {
+            background-color: #cbd5e1;
+        }
+
+        /* Footer Note */
+        .footer-note {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.875rem;
+            color: var(--text-color-light);
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>RICE-C Score Calculator</h1>
+        <p>Prioritize features by balancing value against effort and technical risk.</p>
+    </div>
+
+    <div class="task-input-group">
+        <label for="task-description">Task or Feature Description</label>
+        <input type="text" id="task-description" class="task-input" placeholder="e.g., Add dark mode to the user dashboard">
+    </div>
+
+    <div class="calculator-grid">
+
+        <div class="input-controls">
+            <!-- Reach -->
+            <div class="form-section">
+                <h2>Reach</h2>
+                <p>How many users will this feature affect per month?</p>
+                <div class="options-grid grid-cols-2 sm-grid-cols-4">
+                    <div class="radio-option"><input type="radio" id="reach1" name="reach" value="100"><label for="reach1">Tiny</label></div>
+                    <div class="radio-option"><input type="radio" id="reach2" name="reach" value="500"><label for="reach2">Some</label></div>
+                    <div class="radio-option"><input type="radio" id="reach3" name="reach" value="1500"><label for="reach3">Many</label></div>
+                    <div class="radio-option"><input type="radio" id="reach4" name="reach" value="5000"><label for="reach4">All</label></div>
+                </div>
+            </div>
+
+            <!-- Impact -->
+            <div class="form-section">
+                <h2>Impact</h2>
+                <p>How much will this impact a single user's experience?</p>
+                <div class="options-grid grid-cols-2 sm-grid-cols-3">
+                    <div class="radio-option"><input type="radio" id="impact1" name="impact" value="0.5"><label for="impact1">Low</label></div>
+                    <div class="radio-option"><input type="radio" id="impact2" name="impact" value="1"><label for="impact2">Medium</label></div>
+                    <div class="radio-option"><input type="radio" id="impact3" name="impact" value="2"><label for="impact3">High</label></div>
+                    <div class="radio-option" style="grid-column: 1 / -1;"><input type="radio" id="impact4" name="impact" value="3"><label for="impact4">Massive: A game-changer</label></div>
+                </div>
+            </div>
+
+            <!-- Confidence -->
+            <div class="form-section">
+                <h2>Confidence</h2>
+                <p>How confident are you in your estimates?</p>
+                <div class="options-grid grid-cols-3">
+                    <div class="radio-option"><input type="radio" id="conf1" name="confidence" value="0.5"><label for="conf1">Low</label></div>
+                    <div class="radio-option"><input type="radio" id="conf2" name="confidence" value="0.8"><label for="conf2">Medium</label></div>
+                    <div class="radio-option"><input type="radio" id="conf3" name="confidence" value="1.0"><label for="conf3">High</label></div>
+                </div>
+            </div>
+
+            <!-- Effort -->
+            <div class="form-section">
+                <h2>Effort</h2>
+                <p>What is the estimated total time commitment?</p>
+                <div class="options-grid grid-cols-2 sm-grid-cols-3">
+                    <div class="radio-option"><input type="radio" id="effort1" name="effort" value="1"><label for="effort1">~1 week</label></div>
+                    <div class="radio-option"><input type="radio" id="effort2" name="effort" value="2.5"><label for="effort2">2-3 weeks</label></div>
+                    <div class="radio-option"><input type="radio" id="effort3" name="effort" value="4"><label for="effort3">1 month</label></div>
+                    <div class="radio-option"><input type="radio" id="effort4" name="effort" value="16"><label for="effort4">2-6 months</label></div>
+                    <div class="radio-option"><input type="radio" id="effort5" name="effort" value="52"><label for="effort5">~1 year</label></div>
+                    <div class="radio-option"><input type="radio" id="effort6" name="effort" value="104"><label for="effort6">> 1 year</label></div>
+                </div>
+            </div>
+
+            <!-- Complexity -->
+            <div class="form-section">
+                <h2>Complexity</h2>
+                <p>What is the technical risk and potential for bugs?</p>
+                <div class="options-grid grid-cols-2 sm-grid-cols-4">
+                    <div class="radio-option" title="The feature is isolated, uses standard patterns, and has no dependencies on fragile code."><input type="radio" id="comp1" name="complexity" value="1.0"><label for="comp1">Low</label></div>
+                    <div class="radio-option" title="Interacts with a few well-understood parts of the system. The risk of unintended side effects is present but manageable."><input type="radio" id="comp2" name="complexity" value="1.5"><label for="comp2">Medium</label></div>
+                    <div class="radio-option" title="Touches a critical, complex, or poorly documented part of the codebase. Requires extensive regression testing."><input type="radio" id="comp3" name="complexity" value="2.0"><label for="comp3">High</label></div>
+                    <div class="radio-option" title="Involves major refactoring of core logic, architectural changes, or has a high probability of introducing subtle, hard-to-find bugs."><input type="radio" id="comp4" name="complexity" value="3.0"><label for="comp4">Very High</label></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Score Display -->
+        <div class="score-panel">
+            <h3 id="score-title" class="score-title">Your RICE-C Score</h3>
+            <div id="score-display" class="score-display">--</div>
+            <p id="score-formula" class="score-formula"></p>
+            <p id="score-summary" class="score-summary"></p>
+            <button id="reset-button" class="reset-button">Reset</button>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        <p>Note: Based on the options provided, scores can range from ~0.1 to 15,000. The score is for relative prioritization, not absolute value.</p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const allInputs = document.querySelectorAll('input[type="radio"], input[type="text"]');
+        const radioButtons = document.querySelectorAll('input[type="radio"]');
+        const taskInput = document.getElementById('task-description');
+
+        const scoreTitle = document.getElementById('score-title');
+        const scoreDisplay = document.getElementById('score-display');
+        const scoreFormula = document.getElementById('score-formula');
+        const scoreSummary = document.getElementById('score-summary');
+        const resetButton = document.getElementById('reset-button');
+
+        function calculateRICE_C() {
+            const reach = document.querySelector('input[name="reach"]:checked');
+            const impact = document.querySelector('input[name="impact"]:checked');
+            const confidence = document.querySelector('input[name="confidence"]:checked');
+            const effort = document.querySelector('input[name="effort"]:checked');
+            const complexity = document.querySelector('input[name="complexity"]:checked');
+
+            const taskDescription = taskInput.value.trim();
+
+            if (taskDescription) {
+                scoreTitle.textContent = `RICE-C Score for "${taskDescription}"`;
+            } else {
+                scoreTitle.textContent = 'Your RICE-C Score';
+            }
+
+            if (reach && impact && confidence && effort && complexity) {
+                const reachVal = parseFloat(reach.value);
+                const impactVal = parseFloat(impact.value);
+                const confidenceVal = parseFloat(confidence.value);
+                const effortVal = parseFloat(effort.value);
+                const complexityVal = parseFloat(complexity.value);
+
+                const ricecScore = (reachVal * impactVal * confidenceVal) / (effortVal * complexityVal);
+
+                scoreDisplay.textContent = ricecScore.toFixed(1);
+                scoreFormula.textContent = `(R×I×C) / (E×C) = (${reachVal}×${impactVal}×${confidenceVal}) / (${effortVal}×${complexityVal})`;
+
+                if (ricecScore > 1200) {
+                    scoreSummary.textContent = "This is likely a very high-priority task.";
+                } else if (ricecScore > 600) {
+                    scoreSummary.textContent = "This could be a valuable feature.";
+                } else if (ricecScore > 100) {
+                    scoreSummary.textContent = "This might be worth considering.";
+                } else if (ricecScore > 24) {
+                    scoreSummary.textContent = "This is likely low priority.";
+                } else {
+                    scoreSummary.textContent = "This is very low priority and likely not worth the effort.";
+                }
+
+                scoreDisplay.classList.add('calculated');
+            } else {
+                scoreDisplay.textContent = '--';
+                scoreFormula.textContent = '';
+                scoreSummary.textContent = '';
+                scoreDisplay.classList.remove('calculated');
+            }
+        }
+
+        function resetCalculator() {
+            radioButtons.forEach(radio => {
+                radio.checked = false;
+            });
+            taskInput.value = '';
+            calculateRICE_C();
+        }
+
+        allInputs.forEach(input => {
+            input.addEventListener('input', calculateRICE_C);
+        });
+
+        resetButton.addEventListener('click', resetCalculator);
+    });
+</script>
+
+</body>
+</html>
