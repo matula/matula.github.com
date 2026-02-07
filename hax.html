@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HACK_SYS v4.2.1 // CLASSIFIED</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --cyan: #00d4ff;
+  --cyan-dim: #007a99;
+  --green: #00ff41;
+  --red: #ff0040;
+  --amber: #ffaa00;
+  --white: #e0e0e0;
+  --glow-cyan: 0 0 10px rgba(0,212,255,0.5), 0 0 20px rgba(0,212,255,0.2);
+  --glow-green: 0 0 10px rgba(0,255,65,0.5), 0 0 20px rgba(0,255,65,0.2);
+  --glow-red: 0 0 10px rgba(255,0,64,0.5);
+}
+
+body {
+  background: #000;
+  color: var(--cyan);
+  font-family: 'Courier New', Consolas, Monaco, monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  cursor: none;
+}
+
+/* CRT Scanlines */
+#scanlines {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0,0,0,0.12) 0px,
+    rgba(0,0,0,0.12) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* Status Bar */
+#status-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 30px;
+  background: rgba(0,15,30,0.95);
+  border-bottom: 1px solid var(--cyan-dim);
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  font-size: 11px;
+  color: var(--cyan);
+  z-index: 100;
+  text-shadow: var(--glow-cyan);
+  letter-spacing: 1px;
+}
+
+/* Upload Bar */
+#upload-bar {
+  position: fixed;
+  top: 30px; left: 0; right: 0;
+  height: 52px;
+  background: rgba(0,10,20,0.95);
+  border-bottom: 2px solid var(--red);
+  box-shadow: 0 2px 15px rgba(255,0,64,0.3);
+  display: none;
+  align-items: center;
+  padding: 0 20px;
+  font-size: 16px;
+  color: var(--red);
+  z-index: 100;
+  gap: 16px;
+}
+#upload-bar .upload-label {
+  white-space: nowrap;
+  text-shadow: var(--glow-red);
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+#upload-bar .upload-track {
+  flex: 1;
+  height: 18px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,0,64,0.4);
+}
+#upload-bar .upload-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--red);
+  box-shadow: var(--glow-red);
+  transition: width 0.3s ease;
+}
+#upload-bar .upload-pct {
+  width: 56px;
+  text-align: right;
+  text-shadow: var(--glow-red);
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* Terminal */
+#terminal {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  top: 0;
+  padding: 12px 16px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+#terminal::-webkit-scrollbar { display: none; }
+#terminal.with-status { top: 30px; }
+#terminal.with-upload { top: 82px; }
+
+.line {
+  white-space: pre-wrap;
+  word-break: break-all;
+  min-height: 1.4em;
+}
+.line-cyan { color: var(--cyan); }
+.line-green { color: var(--green); text-shadow: var(--glow-green); }
+.line-red { color: var(--red); text-shadow: var(--glow-red); }
+.line-amber { color: var(--amber); }
+.line-white { color: var(--white); }
+.line-dim { color: #4466aa; }
+.line-bold { font-weight: bold; }
+
+/* Blinking cursor character */
+.cursor-blink {
+  animation: blink 0.6s step-end infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Pulsing text */
+.pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* Panels Container */
+#panels-container {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* Popup Panels */
+.hacker-panel {
+  position: absolute;
+  background: rgba(0,10,20,0.93);
+  border: 1px solid var(--cyan);
+  box-shadow: var(--glow-cyan), inset 0 0 30px rgba(0,212,255,0.03);
+  padding: 16px 20px;
+  min-width: 280px;
+  max-width: 500px;
+  font-size: 13px;
+  pointer-events: none;
+  animation: panelIn 0.3s ease-out forwards;
+  will-change: transform, opacity;
+}
+.hacker-panel.dismissing {
+  animation: panelOut 0.6s ease-in forwards;
+}
+.hacker-panel .panel-header {
+  color: var(--white);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-bottom: 1px solid var(--cyan-dim);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  text-shadow: var(--glow-cyan);
+}
+.hacker-panel .panel-line {
+  margin: 3px 0;
+  color: var(--cyan);
+}
+.hacker-panel .panel-line.green { color: var(--green); text-shadow: var(--glow-green); }
+.hacker-panel .panel-line.red { color: var(--red); }
+.hacker-panel .panel-line.amber { color: var(--amber); }
+.hacker-panel .panel-line.white { color: var(--white); }
+
+/* Special non-dismissing panel */
+.hacker-panel.special {
+  border-color: var(--green);
+  box-shadow: 0 0 15px rgba(0,255,65,0.4), 0 0 30px rgba(0,255,65,0.15), inset 0 0 30px rgba(0,255,65,0.03);
+  pointer-events: auto;
+  z-index: 60;
+}
+.hacker-panel.alert-panel {
+  border-color: var(--red);
+  box-shadow: 0 0 15px rgba(255,0,64,0.4), 0 0 30px rgba(255,0,64,0.15);
+}
+
+/* Progress bar inside panels */
+.panel-progress-track {
+  width: 100%;
+  height: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,0,64,0.3);
+  margin: 6px 0;
+}
+.panel-progress-fill {
+  height: 100%;
+  background: var(--red);
+  box-shadow: var(--glow-red);
+  width: 0%;
+}
+.panel-progress-fill.animated {
+  animation: fillBar var(--dur, 3s) ease-in-out forwards;
+}
+@keyframes fillBar {
+  from { width: 0%; }
+  to { width: var(--target, 100%); }
+}
+
+/* Radar */
+.radar-container {
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  border: 1px solid var(--cyan);
+  position: relative;
+  overflow: hidden;
+  margin: 8px auto;
+  background:
+    radial-gradient(circle, transparent 28%, rgba(0,212,255,0.06) 55%, transparent 56%),
+    linear-gradient(0deg, transparent 48%, rgba(0,212,255,0.15) 48%, rgba(0,212,255,0.15) 52%, transparent 52%),
+    linear-gradient(90deg, transparent 48%, rgba(0,212,255,0.15) 48%, rgba(0,212,255,0.15) 52%, transparent 52%);
+  box-shadow: var(--glow-cyan);
+}
+.radar-sweep {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(0,212,255,0.35) 40deg, transparent 50deg);
+  animation: radarSpin 2s linear infinite;
+  border-radius: 50%;
+}
+.radar-dot {
+  position: absolute;
+  width: 4px; height: 4px;
+  background: var(--cyan);
+  border-radius: 50%;
+  box-shadow: var(--glow-cyan);
+  animation: radarBlink 1.5s ease-in-out infinite;
+}
+@keyframes radarSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes radarBlink { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+
+/* Panel animations */
+@keyframes panelIn {
+  0% { opacity: 0; transform: scale(0.85) translateY(-8px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes panelOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; transform: scale(0.95) translateY(5px); }
+}
+
+/* Full-screen flash */
+.screen-flash {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 500;
+  pointer-events: none;
+}
+.flash-green {
+  background: rgba(0,255,65,0.08);
+  animation: flashFade 1.5s ease-out forwards;
+}
+.flash-green span {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--green);
+  font-size: 36px;
+  font-weight: bold;
+  letter-spacing: 8px;
+  text-shadow: var(--glow-green);
+  white-space: nowrap;
+}
+@keyframes flashFade {
+  0% { opacity: 1; }
+  60% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Victory Screen */
+#victory-screen {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: #000;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 600;
+  text-align: center;
+  animation: victoryFadeIn 2s ease-out forwards;
+}
+#victory-screen .skull {
+  color: var(--green);
+  font-size: 10px;
+  line-height: 1.1;
+  text-shadow: var(--glow-green);
+  margin-bottom: 24px;
+  white-space: pre;
+}
+#victory-screen .victory-title {
+  color: var(--green);
+  font-size: 32px;
+  font-weight: bold;
+  letter-spacing: 6px;
+  text-shadow: 0 0 20px rgba(0,255,65,0.6), 0 0 40px rgba(0,255,65,0.3);
+  margin-bottom: 12px;
+}
+#victory-screen .victory-sub {
+  color: var(--cyan);
+  font-size: 16px;
+  letter-spacing: 3px;
+  text-shadow: var(--glow-cyan);
+  margin-bottom: 8px;
+}
+#victory-screen .victory-name {
+  color: var(--green);
+  font-size: 20px;
+  margin-top: 20px;
+  text-shadow: var(--glow-green);
+}
+@keyframes victoryFadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* White flash for victory */
+.white-flash {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: white;
+  z-index: 550;
+  pointer-events: none;
+  animation: whiteFlash 1.8s step-end forwards;
+}
+@keyframes whiteFlash {
+  0% { opacity: 1; }
+  15% { opacity: 0; }
+  20% { opacity: 1; }
+  35% { opacity: 0; }
+  40% { opacity: 1; }
+  60% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* Screen glitch effect for Phase 4 endgame */
+body.glitching {
+  animation: screenGlitch 0.15s infinite;
+}
+@keyframes screenGlitch {
+  0% { filter: none; }
+  20% { filter: hue-rotate(90deg) brightness(1.2); }
+  40% { filter: none; transform: translate(-1px, 1px); }
+  60% { filter: invert(0.05); }
+  80% { filter: none; transform: translate(1px, -1px); }
+  100% { filter: none; }
+}
+
+/* Falling debris particles for victory */
+.debris {
+  position: fixed;
+  width: 2px;
+  height: 2px;
+  background: var(--green);
+  box-shadow: 0 0 4px var(--green);
+  z-index: 610;
+  pointer-events: none;
+  animation: fall linear forwards;
+}
+@keyframes fall {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+}
+</style>
+</head>
+<body>
+<div id="scanlines"></div>
+<div id="status-bar">
+  <span>NEXIDYNE OBSIDIAN // BREACH ACTIVE</span>
+  <span>TRACE: <span id="trace-pct">0.0</span>%</span>
+</div>
+<div id="upload-bar">
+  <span class="upload-label">UPLOADING BLACKOUT.EXE</span>
+  <div class="upload-track"><div class="upload-fill" id="upload-fill"></div></div>
+  <span class="upload-pct" id="upload-pct">0%</span>
+</div>
+<div id="terminal"></div>
+<div id="panels-container"></div>
+<div id="victory-screen">
+  <div class="skull"></div>
+  <div class="victory-title">NEXIDYNE SERVERS<br>DESTROYED</div>
+  <div class="victory-sub">BLACKOUT.EXE COMPLETE</div>
+  <div class="victory-sub">PROJECT PANOPTICON: OFFLINE</div>
+  <div class="victory-sub" style="margin-top:8px;">THE WORLD IS FREE.</div>
+  <div class="victory-name"></div>
+</div>
+
+<script>
+// ─── CONFIG ─────────────────────────────────────────────
+const CONFIG = {
+  MAX_LINES: 300,
+  PANEL_INTERVAL: [50, 75],
+  PANEL_LIFETIME: [4000, 9000],
+  MAX_PANELS: 6,
+  CHARS_PER_KEY: [3, 5],
+  TRACE_INC: [0.3, 1.0],
+  HACK_TARGET: [600, 800],
+  TYPEWRITER_SPEED: 18,
+  BOOT_LINE_DELAY: 600,
+  UPLOAD_AUTO_RATE: 0.25,
+  UPLOAD_KEY_BOOST: [0.5, 1.2],
+  UPLOAD_THROTTLED_AUTO: 0.12,
+  UPLOAD_THROTTLED_BOOST: [0.8, 1.8],
+};
+
+// ─── STATE ──────────────────────────────────────────────
+const PHASE = { NAME: 1, EMAIL: 2, HACK: 3, UPLOAD: 4, VICTORY: 5 };
+const state = {
+  phase: PHASE.NAME,
+  playerName: '',
+  keypressCount: 0,
+  hackTarget: 0,
+  hackComplete: false,
+  uploadPct: 0,
+  uploadThrottled: false,
+  tracePct: 0,
+  activePanels: 0,
+  nextPanelAt: 0,
+  emailDone: false,
+  bootDone: false,
+  uploadInterval: null,
+  milestone20: false,
+  milestone60: false,
+  milestone85: false,
+  uploadTypingEnabled: false,
+  panelCleanups: [],
+};
+
+// ─── TEXT POOLS ─────────────────────────────────────────
+const HACK_LINES = [
+  "ssh root@{0}.{1}.{2}.{3} -p 443 --bypass-auth",
+  "Establishing encrypted tunnel... OK",
+  ">> TRACE ROUTE: {0} hops detected",
+  "Spoofing MAC address... [00:1A:2B:{0}:{1}:{2}]",
+  "Injecting packet sequence #{0}...",
+  "DNS poisoning target: ns1.nexidyne-{0}.internal",
+  "Rerouting through proxy chain: Moscow > Taipei > Sao Paulo",
+  ">> Firewall detected. Initiating countermeasures...",
+  "Deploying polymorphic worm to subnet {0}.{1}.0/24",
+  "Cracking WPA3 handshake.......... [CAPTURED]",
+  "VPN tunnel established via node DARKSTAR-{0}",
+  ">> Connection upgraded to TLS 1.3 // cipher: AES-256-GCM",
+  "Pinging nexidyne-obsidian.internal... 2ms",
+  "Establishing reverse shell on port {0}...",
+  "nmap -sS -T5 {0}.{1}.{2}.0/24 --script vuln",
+  ">> 3 open ports found: 22, 443, 8080",
+  "Intercepting SSL certificate... MITM active",
+  () => `Rerouting to IP ${bogusIP()}...`,
+  () => `Tracing source: ${bogusIP()} > ${bogusIP()} > ${bogusIP()}`,
+  () => `Ping ${bogusIP()}... response time: ${randInt(1,5)}ms`,
+  () => `Hijacking connection from ${bogusIP()} to ${bogusIP()}`,
+];
+
+const FS_LINES = [
+  "cat /etc/shadow | decrypt --brute-force --threads=64",
+  "Extracting database credentials from memory dump...",
+  "SELECT * FROM users WHERE access_level > 9;",
+  ">> {0} records found. Exfiltrating...",
+  "chmod 777 /root/.ssh/authorized_keys",
+  "rm -rf /var/log/auth.log  // covering tracks",
+  "Decrypting RSA-4096 private key... [##########] 100%",
+  "Mounting hidden partition /dev/sda3...",
+  () => `Found: ${randomFileName()} (${randInt(1,99)}.${randInt(1,9)} GB)`,
+  "Keylogger installed at PID {0}",
+  ">> Buffer overflow successful. Shell spawned.",
+  "Dumping NTLM hashes... {0} credentials captured",
+  "Reading /nexidyne/classified/surveillance_nodes.db...",
+  "tar -xzf payload.tar.gz -C /tmp/.hidden/",
+  "Decrypting Private SSH Key...",
+  () => `-----BEGIN RSA PRIVATE KEY----- ${randomSSHKey()}${randomSSHKey()}`,
+  () => `${randomSSHKey()}${randomSSHKey()}${randomSSHKey()} -----END RSA PRIVATE KEY-----`,
+];
+
+const EXPLOIT_LINES = [
+  "Loading exploit: CVE-2024-{0} (kernel privilege escalation)",
+  "Payload compiled. Injecting into svchost.exe...",
+  ">> ROOT ACCESS OBTAINED",
+  "Disabling Nexidyne security cameras on floors 3-7...",
+  "Overriding biometric lock... FINGERPRINT SPOOFED",
+  "Satellite uplink frequency locked: {0} MHz",
+  "MAINFRAME BREACH: Level {0} clearance achieved",
+  "Bypassing 2FA via SS7 intercept...",
+  "Zero-day deployed. No patch available.",
+  "Quantum decryption module loaded... ETA: {0}s",
+  "Intercepting Nexidyne SIGINT feed...",
+  "Track IP address using Visual Basic GUI interface...",
+  "Reversing the polarity of the neutron flow...",
+  "Hacking the Gibson...",
+  "I'm in the mainframe. I'm in.",
+  "Encrypting the encryption with double encryption...",
+  "Downloading more RAM... [SUCCESS]",
+  "Compiling hack.exe with -O3 --hack-harder",
+  "sudo make me_a_sandwich",
+  "Running Hollywood_OS.exe --dramatic-mode",
+  "Accessing the cyber... the whole cyber...",
+  "Triangulating the IP via 7 proxies...",
+  "Creating a GUI interface using Visual Basic...",
+  "Activating mainframe.hack(true, {force: true})...",
+  ">> Bypassed. They never stood a chance.",
+  "Type 'cookie', you idiot! ...wait wrong terminal",
+  "It's a UNIX system! I know this!",
+  "The software is downloading at 300 gigs per second!",
+  "I'm going to search the Dark Net for a digital footprint...",
+  "Enhance. Enhance. Enhance. ENHANCE.",
+  "I'll create a GUI interface using Visual Basic to track the killer's IP",
+  "We need to hack the planet. All of it.",
+  "I'm going to need a second keyboard for this...",
+  "The firewall is made of... actual fire?? Hacking anyway...",
+  "Zoom in on that pixel. Now rotate it. NOW ENHANCE.",
+  "I've hacked into the mainframe's mainframe. Mainframe-ception.",
+  "The password is... swordfish. It's always swordfish.",
+  "I'm in. Wait, this is just the screensaver.",
+  "Uploading skeleton key to all routers simultaneously...",
+  "This isn't even my final form. sudo --final-form",
+];
+
+const COMMENT_LINES = [
+  "// TODO: don't get caught",
+  "/* CLASSIFIED - EYES ONLY */",
+  "# Hack the planet",
+  "// Remember: there is no spoon",
+  "/* If you're reading this, it's too late */",
+  "// This code is spaghetti but it works",
+  ">> [OK]",
+  "............",
+  "::::::::::::::::::::::::::::::::::::::::",
+  ">> ACKNOWLEDGED",
+  "// They told me I couldn't hack a mainframe in my pajamas",
+  "// They were wrong",
+  "/* GHOST_COLLECTIVE was here */",
+  ">> STANDBY...",
+  "// printf(\"hello world\"); // the OG hack",
+  "// Two keyboards. That's the secret.",
+  "// \"I know Kung Fu\" -- but for computers",
+  "/* This is what happens when you use 'password' as a password */",
+  "// My other hack is a Buick",
+  "// I learned this from a movie once",
+  "// HACK HARDER (the sequel)",
+];
+
+const UPLOAD_LINES = [
+  "Bypassing firewall node {0}...",
+  "Rerouting upload stream through backup channel...",
+  "Counter-intrusion detected on port {0}... BLOCKED",
+  "Nexidyne trace algorithm closing... evading...",
+  "Firewall layer {0} of 7 breached...",
+  "Upload integrity check... PASSED",
+  "Overclocking upload bandwidth...",
+  ">> BLACKOUT.EXE packet {0} transmitted",
+  "Anti-virus countermeasure neutralized...",
+  "Nexidyne ICE detected... melting...",
+  "Re-encrypting upload stream... AES-512-CTR",
+  "Bouncing signal off satellite GHOST-{0}...",
+  "Upload thread {0} of 8: ACTIVE",
+  ">> WARNING: Nexidyne security closing in...",
+  "Injecting decoy packets to confuse trace...",
+  ">> Keep typing. Almost there.",
+];
+
+const HOSTNAMES = [
+  "NEXIDYNE-DC-07", "OBSIDIAN-NODE-3", "PANOPTICON-HQ",
+  "NEX-DARKNET-42", "NEX-SATCOM-9", "NEXIDYNE-VAULT-12",
+  "NEX-FIREWALL-5", "NEXIDYNE-EU-01", "NEX-CLASSIFIED-7",
+  "OBSIDIAN-BACKUP", "NEX-ECHELON-3", "PANOPTICON-RELAY",
+];
+
+const OS_NAMES = [
+  "NexOS v7.3 (CLASSIFIED)", "OBSIDIAN/UNIX 4.1",
+  "NexidyneOS 12.0.4", "PANOPTICON KERNEL 3.7",
+  "BlackIce OS 2.1", "NexShield Enterprise",
+];
+
+// ─── UTILITIES ──────────────────────────────────────────
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randFloat(min, max) { return Math.random() * (max - min) + min; }
+function pickRandom(arr) { return arr[randInt(0, arr.length - 1)]; }
+function randomIP() { return `${randInt(10,255)}.${randInt(0,255)}.${randInt(0,255)}.${randInt(1,254)}`; }
+function bogusIP() { return `${randInt(10,999)}.${randInt(0,999)}.${randInt(0,999)}.${randInt(1,999)}`; }
+
+const FILE_PREFIXES = ['project_panopticon', 'classified_ops', 'nexidyne_internal', 'surveillance_data', 'obsidian_core', 'darknet_dump', 'employee_records', 'financial_ledger', 'blacksite_coords', 'agent_dossiers'];
+const FILE_SUFFIXES = ['.tar.gz.enc', '.db.enc', '.zip.gpg', '.7z.aes', '.iso.crypt', '.bak.enc', '.dat.pgp'];
+function randomFileName() { return pickRandom(FILE_PREFIXES) + pickRandom(FILE_SUFFIXES); }
+
+function randomSSHKey() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let key = '';
+  for (let i = 0; i < 44; i++) key += chars[randInt(0, chars.length - 1)];
+  return key;
+}
+
+function pickWeighted(pairs) {
+  const total = pairs.reduce((s, p) => s + p[1], 0);
+  let r = Math.random() * total;
+  for (const [val, w] of pairs) { r -= w; if (r <= 0) return val; }
+  return pairs[0][0];
+}
+
+function resolveTemplate(str) {
+  return str.replace(/\{(\d+)\}/g, () => randInt(0, 255));
+}
+
+// ─── TERMINAL ───────────────────────────────────────────
+const terminal = document.getElementById('terminal');
+let lineCount = 0;
+
+function addLine(text, cls = 'line-cyan') {
+  const div = document.createElement('div');
+  div.className = `line ${cls}`;
+  div.textContent = text;
+  terminal.appendChild(div);
+  lineCount++;
+  if (lineCount > CONFIG.MAX_LINES) {
+    const excess = lineCount - CONFIG.MAX_LINES;
+    for (let i = 0; i < excess; i++) terminal.removeChild(terminal.firstChild);
+    lineCount = CONFIG.MAX_LINES;
+  }
+  terminal.scrollTop = terminal.scrollHeight;
+  return div;
+}
+
+function addLineHTML(html, cls = 'line-cyan') {
+  const div = document.createElement('div');
+  div.className = `line ${cls}`;
+  div.innerHTML = html;
+  terminal.appendChild(div);
+  lineCount++;
+  terminal.scrollTop = terminal.scrollHeight;
+  return div;
+}
+
+function clearTerminal() {
+  terminal.innerHTML = '';
+  lineCount = 0;
+}
+
+// Character buffer for incremental typing
+const charBuffer = {
+  queue: '',       // remaining characters to output for current line
+  lineEl: null,    // current DOM element being typed into
+  pools: null,     // current pool set
+};
+
+function pickLineColor() {
+  return pickWeighted([
+    ['line-cyan', 45],
+    ['line-dim', 15],
+    ['line-green', 12],
+    ['line-amber', 10],
+    ['line-white', 10],
+    ['line-red', 8],
+  ]);
+}
+
+function startNewBufferLine(pools) {
+  const allPools = pools || [HACK_LINES, FS_LINES, EXPLOIT_LINES, COMMENT_LINES];
+  const pool = pickRandom(allPools);
+  let raw = pickRandom(pool);
+
+  // Handle dynamic generators
+  if (typeof raw === 'function') raw = raw();
+
+  const text = resolveTemplate(raw);
+  const color = pickLineColor();
+  charBuffer.queue = text;
+  charBuffer.lineEl = addLine('', color);
+}
+
+function addHackerText(pools) {
+  charBuffer.pools = pools;
+  let charsToAdd = randInt(...CONFIG.CHARS_PER_KEY);
+
+  while (charsToAdd > 0) {
+    // If no current line, start one
+    if (!charBuffer.lineEl || charBuffer.queue.length === 0) {
+      startNewBufferLine(pools);
+    }
+
+    // Take chars from the queue
+    const take = Math.min(charsToAdd, charBuffer.queue.length);
+    const chunk = charBuffer.queue.slice(0, take);
+    charBuffer.queue = charBuffer.queue.slice(take);
+    charBuffer.lineEl.textContent += chunk;
+    charsToAdd -= take;
+
+    // If line is done, null it out so next iteration starts a new one
+    if (charBuffer.queue.length === 0) {
+      charBuffer.lineEl = null;
+    }
+  }
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+// ─── TYPEWRITER ─────────────────────────────────────────
+function typewriterMultiline(lines, callback) {
+  let lineIdx = 0;
+  let charIdx = 0;
+  let currentDiv = null;
+  let currentText = null;
+
+  const cursorEl = document.createElement('span');
+  cursorEl.className = 'cursor-blink';
+  cursorEl.textContent = '\u2588';
+
+  function startLine() {
+    currentDiv = document.createElement('div');
+    currentDiv.className = 'line line-cyan';
+    currentText = document.createTextNode('');
+    currentDiv.appendChild(currentText);
+    currentDiv.appendChild(cursorEl);
+    terminal.appendChild(currentDiv);
+    lineCount++;
+    charIdx = 0;
+  }
+
+  startLine();
+
+  const iv = setInterval(() => {
+    if (lineIdx >= lines.length) {
+      clearInterval(iv);
+      cursorEl.remove();
+      if (callback) callback();
+      return;
+    }
+
+    const line = lines[lineIdx];
+    if (charIdx < line.length) {
+      currentText.textContent += line[charIdx];
+      charIdx++;
+      terminal.scrollTop = terminal.scrollHeight;
+    } else {
+      // Move to next line
+      lineIdx++;
+      if (lineIdx < lines.length) {
+        cursorEl.remove();
+        startLine();
+      } else {
+        clearInterval(iv);
+        cursorEl.remove();
+        if (callback) callback();
+      }
+    }
+  }, CONFIG.TYPEWRITER_SPEED);
+
+  return iv;
+}
+
+// ─── PANELS ─────────────────────────────────────────────
+function spawnPanel() {
+  if (state.activePanels >= CONFIG.MAX_PANELS) return;
+
+  const panel = document.createElement('div');
+  panel.className = 'hacker-panel';
+
+  // Panels on right ~40% of screen so they don't cover the typing area
+  const minX = Math.floor(window.innerWidth * 0.55);
+  const maxX = Math.max(minX + 50, window.innerWidth - 520);
+  panel.style.left = randInt(minX, maxX) + 'px';
+
+  const minY = (state.phase === PHASE.UPLOAD) ? 90 : 36;
+  const maxY = Math.max(minY + 50, window.innerHeight * 0.45);
+  panel.style.top = randInt(minY, maxY) + 'px';
+
+  const builder = pickRandom([
+    buildSystemInfoPanel,
+    buildProgressPanel,
+    buildConnectionPanel,
+    buildPasswordPanel,
+    buildRadarPanel,
+    buildExfilPanel,
+    buildMatrixPanel,
+  ]);
+
+  const { html, cleanup } = builder();
+  panel.innerHTML = html;
+  document.getElementById('panels-container').appendChild(panel);
+  state.activePanels++;
+
+  const lifetime = randInt(...CONFIG.PANEL_LIFETIME);
+  setTimeout(() => {
+    panel.classList.add('dismissing');
+    setTimeout(() => {
+      if (cleanup) cleanup();
+      panel.remove();
+      state.activePanels--;
+    }, 600);
+  }, lifetime);
+}
+
+function spawnSpecialPanel(html, extraClass = 'special') {
+  const panel = document.createElement('div');
+  panel.className = `hacker-panel ${extraClass}`;
+  panel.style.left = '50%';
+  panel.style.top = '30%';
+  panel.style.transform = 'translate(-50%, -50%)';
+  panel.innerHTML = html;
+  document.getElementById('panels-container').appendChild(panel);
+  return panel;
+}
+
+function spawnAlertPanel(html) {
+  const panel = spawnSpecialPanel(html, 'alert-panel');
+  setTimeout(() => {
+    panel.classList.add('dismissing');
+    setTimeout(() => panel.remove(), 600);
+  }, 4000);
+}
+
+// ─── PANEL BUILDERS ─────────────────────────────────────
+function buildSystemInfoPanel() {
+  const host = pickRandom(HOSTNAMES);
+  const ip = randomIP();
+  const os = pickRandom(OS_NAMES);
+  const access = pickRandom(['ROOT', 'ADMIN', 'LEVEL-7', 'CLASSIFIED']);
+  const html = `
+    <div class="panel-header">SYSTEM INTEL</div>
+    <div class="panel-line white">TARGET: ${host}</div>
+    <div class="panel-line">IP: ${ip}</div>
+    <div class="panel-line">OS: ${os}</div>
+    <div class="panel-line green">STATUS: COMPROMISED</div>
+    <div class="panel-line green">ACCESS: ${access}</div>
+    <div class="panel-line">UPTIME: ${randInt(1,999)} days</div>
+  `;
+  return { html, cleanup: null };
+}
+
+function buildProgressPanel() {
+  const labels = ['DECRYPTING', 'EXTRACTING', 'COMPILING', 'UPLOADING', 'SCANNING'];
+  const files = ['payload.bin', 'keys.db', 'rootkit.so', 'exploit.exe', 'data.enc'];
+  const label = pickRandom(labels);
+  const file = pickRandom(files);
+  const dur1 = randFloat(2, 5).toFixed(1);
+  const dur2 = randFloat(2, 5).toFixed(1);
+  const t1 = randInt(70, 100);
+  const t2 = randInt(60, 100);
+  const html = `
+    <div class="panel-header">${label}: ${file}</div>
+    <div class="panel-line">${label}...</div>
+    <div class="panel-progress-track">
+      <div class="panel-progress-fill animated" style="--dur:${dur1}s;--target:${t1}%"></div>
+    </div>
+    <div class="panel-line" style="margin-top:6px;">VERIFYING CHECKSUM...</div>
+    <div class="panel-progress-track">
+      <div class="panel-progress-fill animated" style="--dur:${dur2}s;--target:${t2}%"></div>
+    </div>
+  `;
+  return { html, cleanup: null };
+}
+
+function buildConnectionPanel() {
+  const count = randInt(3, 5);
+  let rows = '';
+  for (let i = 0; i < count; i++) {
+    const active = Math.random() > 0.25;
+    const dot = active ? '<span style="color:var(--green)">●</span>' : '<span style="color:var(--red)">○</span>';
+    const status = active ? 'ACTIVE' : pickRandom(['TIMEOUT', 'DROPPED', 'BLOCKED']);
+    rows += `<div class="panel-line">${dot} ${randomIP()}  ${status}</div>`;
+  }
+  const html = `
+    <div class="panel-header">ACTIVE CONNECTIONS</div>
+    ${rows}
+    <div class="panel-line" style="margin-top:6px;">Latency: ${randInt(1,50)}ms</div>
+  `;
+  return { html, cleanup: null };
+}
+
+function buildPasswordPanel() {
+  const el = document.createElement('div');
+  let attempts = 0;
+  const maxAttempts = randInt(8, 15);
+
+  const passChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+  function randomPass() {
+    let p = '';
+    for (let i = 0; i < 8; i++) p += passChars[randInt(0, passChars.length - 1)];
+    return p;
+  }
+
+  const html = `
+    <div class="panel-header">BRUTE FORCE</div>
+    <div class="panel-line white">//PASS: ****************</div>
+    <div class="panel-line pass-attempt">Trying: ${randomPass()}... FAIL</div>
+    <div class="panel-line pass-result" style="display:none;"></div>
+  `;
+
+  // We need to return html as string but also set up an interval after DOM insertion
+  // So we'll use a slightly different approach
+  const wrapper = { html, cleanup: null };
+
+  // Use MutationObserver or just setTimeout to find and animate
+  const intervalId = { id: null };
+  setTimeout(() => {
+    const panels = document.querySelectorAll('.hacker-panel');
+    const lastPanel = panels[panels.length - 1];
+    if (!lastPanel) return;
+    const attemptEl = lastPanel.querySelector('.pass-attempt');
+    const resultEl = lastPanel.querySelector('.pass-result');
+    if (!attemptEl) return;
+
+    intervalId.id = setInterval(() => {
+      attempts++;
+      if (attempts >= maxAttempts) {
+        clearInterval(intervalId.id);
+        attemptEl.textContent = `Trying: ${randomPass()}... MATCH`;
+        attemptEl.classList.add('green');
+        if (resultEl) {
+          resultEl.style.display = 'block';
+          resultEl.textContent = '>> ACCESS GRANTED';
+          resultEl.classList.add('green');
+        }
+      } else {
+        attemptEl.textContent = `Trying: ${randomPass()}... FAIL`;
+      }
+    }, 200);
+  }, 50);
+
+  wrapper.cleanup = () => { if (intervalId.id) clearInterval(intervalId.id); };
+  return wrapper;
+}
+
+function buildRadarPanel() {
+  const dots = [];
+  for (let i = 0; i < randInt(2, 5); i++) {
+    const x = randInt(15, 85);
+    const y = randInt(15, 85);
+    const delay = randFloat(0, 1.5).toFixed(1);
+    dots.push(`<div class="radar-dot" style="left:${x}%;top:${y}%;animation-delay:${delay}s"></div>`);
+  }
+  const html = `
+    <div class="panel-header">SIGNAL TRACKING</div>
+    <div class="radar-container">
+      <div class="radar-sweep"></div>
+      ${dots.join('')}
+    </div>
+    <div class="panel-line" style="text-align:center;margin-top:6px;">${randInt(2,8)} TARGETS LOCATED</div>
+  `;
+  return { html, cleanup: null };
+}
+
+function buildExfilPanel() {
+  const total = randInt(5000, 50000);
+  const done = randInt(100, Math.floor(total * 0.6));
+  const pct = ((done / total) * 100).toFixed(1);
+  const speed = randInt(50, 500);
+  const dur = randFloat(2, 5).toFixed(1);
+  const html = `
+    <div class="panel-header">DATA EXFILTRATION</div>
+    <div class="panel-line">Files: ${done.toLocaleString()} / ${total.toLocaleString()}</div>
+    <div class="panel-progress-track">
+      <div class="panel-progress-fill animated" style="--dur:${dur}s;--target:${pct}%"></div>
+    </div>
+    <div class="panel-line">Speed: ${speed} MB/s</div>
+    <div class="panel-line amber">Dest: *.onion</div>
+  `;
+  return { html, cleanup: null };
+}
+
+function buildMatrixPanel() {
+  const rows = 8;
+  const cols = 24;
+  const matrixChars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF';
+
+  let gridHTML = '';
+  for (let r = 0; r < rows; r++) {
+    let row = '';
+    for (let c = 0; c < cols; c++) {
+      row += matrixChars[randInt(0, matrixChars.length - 1)];
+    }
+    gridHTML += `<div class="panel-line" style="color:#00ff41;opacity:0.7;font-size:11px;letter-spacing:2px;line-height:1.2;">${row}</div>`;
+  }
+
+  const html = `<div class="panel-header">DATA STREAM</div>${gridHTML}`;
+
+  const intervalId = { id: null };
+  setTimeout(() => {
+    const panels = document.querySelectorAll('.hacker-panel');
+    const lastPanel = panels[panels.length - 1];
+    if (!lastPanel) return;
+    const lines = lastPanel.querySelectorAll('.panel-line:not(.panel-header ~ .panel-header)');
+    // Actually select the green lines
+    const greenLines = lastPanel.querySelectorAll('.panel-line[style*="00ff41"]');
+
+    intervalId.id = setInterval(() => {
+      greenLines.forEach(line => {
+        let row = '';
+        for (let c = 0; c < cols; c++) {
+          row += matrixChars[randInt(0, matrixChars.length - 1)];
+        }
+        line.textContent = row;
+      });
+    }, 100);
+  }, 50);
+
+  return { html, cleanup: () => { if (intervalId.id) clearInterval(intervalId.id); } };
+}
+
+// ─── STATUS BAR ─────────────────────────────────────────
+function updateTrace() {
+  state.tracePct += randFloat(...CONFIG.TRACE_INC);
+  if (state.tracePct >= 100) {
+    state.tracePct = 0;
+    showTraceEvadedFlash();
+  }
+  document.getElementById('trace-pct').textContent = Math.min(state.tracePct, 99.9).toFixed(1);
+}
+
+function showTraceEvadedFlash() {
+  const flash = document.createElement('div');
+  flash.className = 'screen-flash flash-green';
+  flash.innerHTML = '<span>TRACE EVADED</span>';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 1500);
+  addLine('>> TRACE EVADED — REROUTING THROUGH BACKUP PROXIES', 'line-green');
+}
+
+// ─── UPLOAD BAR ─────────────────────────────────────────
+function updateUploadBar() {
+  const pct = Math.min(state.uploadPct, 100);
+  document.getElementById('upload-fill').style.width = pct + '%';
+  document.getElementById('upload-pct').textContent = Math.floor(pct) + '%';
+}
+
+// ─── PHASE HANDLERS ─────────────────────────────────────
+
+// Phase 1: Name entry
+let nameInputEl = null;
+let nameCursorEl = null;
+
+function initPhase1() {
+  clearTerminal();
+  addLine('');
+  addLine('> What is your name?', 'line-green');
+  addLine('');
+
+  const inputLine = document.createElement('div');
+  inputLine.className = 'line line-cyan';
+  const prompt = document.createTextNode('> ');
+  nameInputEl = document.createElement('span');
+  nameCursorEl = document.createElement('span');
+  nameCursorEl.className = 'cursor-blink';
+  nameCursorEl.textContent = '\u2588';
+  inputLine.appendChild(prompt);
+  inputLine.appendChild(nameInputEl);
+  inputLine.appendChild(nameCursorEl);
+  terminal.appendChild(inputLine);
+  lineCount++;
+}
+
+function handleNameInput(e) {
+  if (e.repeat) return;
+  const key = e.key;
+  if (key === 'Enter') {
+    if (state.playerName.trim().length === 0) return;
+    e.preventDefault();
+    nameCursorEl.remove();
+    initPhase2();
+    return;
+  }
+  if (key === 'Backspace') {
+    e.preventDefault();
+    state.playerName = state.playerName.slice(0, -1);
+    nameInputEl.textContent = state.playerName;
+    return;
+  }
+  if (key.length === 1) {
+    e.preventDefault();
+    state.playerName += key;
+    nameInputEl.textContent = state.playerName;
+  }
+}
+
+function generateHackerEmail() {
+  // 1. The Vocabulary: Words that sound "cool" in 1995
+  const nouns = [
+    "ghost", "shadow", "zero", "cool", "crash", "burn", "acid",
+    "cyber", "net", "root", "admin", "system", "override",
+    "hack", "warez", "phreak", "binary", "neuro", "plague",
+    "virus", "phantom", "demon", "logic", "bomb", "crypt",
+    "data", "void", "signal", "vector", "prime"
+  ];
+
+  const separators = ["_", ".", "-", ""];
+
+  const domains = [
+    "undernet", "darknet", "shadow", "mainframe", "gibson",
+    "localhost", "backdoor", "blackhole", "proxy", "matrix",
+    "zion", "arpanet", "skynet"
+  ];
+
+  const tlds = [
+    "exe", "sh", "bat", "onion", "root", "hack", "gov",
+    "mil", "null", "void", "bin", "sys", "dat"
+  ];
+
+  // 2. Helper: Random Item Picker
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  // 3. Helper: The "Leetifier" (Turns 'elite' into '3l1t3')
+  const toLeet = (str) => {
+    const map = {
+      'a': ['4', '@', 'a'],
+      'e': ['3', 'e'],
+      'i': ['1', 'i', '!'],
+      'o': ['0', 'o'],
+      's': ['5', '$', 'z', 's'],
+      't': ['7', '+', 't'],
+      'l': ['1', 'l']
+    };
+
+    return str.split('').map(char => {
+      const lower = char.toLowerCase();
+      if (map[lower] && Math.random() > 0.3) { // 70% chance to leet-ify
+        return pick(map[lower]);
+      }
+      return char;
+    }).join('');
+  };
+
+  // 4. Build the Username
+  // Sometimes use 1 word, sometimes 2
+  let username = pick(nouns);
+  if (Math.random() > 0.5) {
+    username += pick(separators) + pick(nouns);
+  }
+
+  // Apply the leet speak
+  username = toLeet(username);
+
+  // 5. Build the Domain
+  const domain = pick(domains);
+  const tld = pick(tlds);
+
+  return `${username}@${domain}.${tld}`;
+}
+
+// Phase 2: The Email
+function initPhase2() {
+  state.phase = PHASE.EMAIL;
+  clearTerminal();
+
+  const name = state.playerName;
+  const from = generateHackerEmail();
+  const emailLines = [
+    `FROM: ${from}`,
+    `TO: ${name}`,
+    `SUBJECT: URGENT — THEY KNOW`,
+    ``,
+    `${name},`,
+    ``,
+    `We don't have much time. NEXIDYNE CORP has deployed`,
+    `Project PANOPTICON — a neural mesh surveillance network`,
+    `embedded in every connected device on the planet.`,
+    `Phones, laptops, smart fridges... everything.`,
+    `They're watching. They're listening.`,
+    `They're building profiles on every human being alive.`,
+    ``,
+    `We intercepted a partial schematic from a Nexidyne data`,
+    `courier. Their central mainframe — codename OBSIDIAN — is`,
+    `vulnerable. One shot. We've built a virus (BLACKOUT.exe)`,
+    `that can fry their servers from the inside, but someone`,
+    `has to manually breach the firewall and upload it.`,
+    ``,
+    `That someone is you.`,
+    ``,
+    `We've routed a spoofed connection through 14 proxy nodes.`,
+    `Once you're in, you'll need to hack through their security`,
+    `layers. Type fast. Type hard. Every keystroke counts.`,
+    `If their trace algorithm locks onto you before the upload`,
+    `completes... well, let's just say Nexidyne doesn't believe`,
+    `in "due process."`,
+    ``,
+    `Good luck. The world is counting on you.`,
+    ``,
+    `    — GHOST_COLLECTIVE`,
+    ``,
+  ];
+
+  typewriterMultiline(emailLines, () => {
+    state.emailDone = true;
+    addLine('');
+    const promptLine = addLine('[ PRESS ENTER TO CONNECT TO NEXIDYNE MAINFRAME ]', 'line-green');
+    promptLine.classList.add('pulse');
+  });
+}
+
+function handleEmailInput(e) {
+  if (e.repeat) return;
+  e.preventDefault();
+  if (!state.emailDone) return;
+  if (e.key === 'Enter') {
+    initPhase3();
+  }
+}
+
+// Phase 3: The Hack
+function initPhase3() {
+  state.phase = PHASE.HACK;
+  state.keypressCount = 0;
+  state.hackTarget = randInt(...CONFIG.HACK_TARGET);
+  state.nextPanelAt = randInt(...CONFIG.PANEL_INTERVAL);
+  clearTerminal();
+
+  // Show status bar
+  document.getElementById('status-bar').style.display = 'flex';
+  terminal.classList.add('with-status');
+
+  // Boot sequence
+  const bootLines = [
+    { text: 'Initializing spoofed connection...', delay: 0 },
+    { text: 'Routing through proxy chain: Reykjavik > Lagos > Taipei > Sao Paulo...', delay: 600 },
+    { text: 'Bypassing Nexidyne perimeter firewall... OK', delay: 1200 },
+    { text: `Injecting credentials... root@nexidyne-obsidian.internal`, delay: 1800 },
+    { text: '//PASS: ******************', delay: 2200 },
+    { text: '>> ACCESS GRANTED — MAINFRAME BREACHED', delay: 2800, cls: 'line-green' },
+    { text: '', delay: 3200 },
+    { text: '>> BEGIN TYPING TO START THE HACK.', delay: 3400, cls: 'line-green line-bold' },
+    { text: '', delay: 3600 },
+  ];
+
+  bootLines.forEach(({ text, delay, cls }) => {
+    setTimeout(() => addLine(text, cls || 'line-cyan'), delay);
+  });
+
+  setTimeout(() => {
+    state.bootDone = true;
+  }, 3800);
+}
+
+function handleHackInput(e) {
+  if (e.repeat) return;
+  if (e.key === 'Meta' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Shift') return;
+  if (!['F5', 'F12'].includes(e.key)) e.preventDefault();
+
+  if (!state.bootDone) return;
+
+  if (state.hackComplete) {
+    if (e.key === 'Enter') {
+      initPhase4();
+    }
+    return;
+  }
+
+  state.keypressCount++;
+  addHackerText();
+  updateTrace();
+
+  if (state.keypressCount >= state.nextPanelAt) {
+    spawnPanel();
+    state.nextPanelAt = state.keypressCount + randInt(...CONFIG.PANEL_INTERVAL);
+  }
+
+  // Check if hack is complete
+  if (state.keypressCount >= state.hackTarget) {
+    state.hackComplete = true;
+    addLine('');
+    addLine('>> MAINFRAME SECURITY NEUTRALIZED', 'line-green');
+    addLine('>> BLACKOUT.EXE PAYLOAD READY FOR UPLOAD', 'line-green');
+
+    const html = `
+      <div class="panel-header" style="color:var(--green);text-shadow:var(--glow-green);">BLACKOUT.EXE</div>
+      <div class="panel-line" style="height:8px;"></div>
+      <div class="panel-line green" style="font-size:14px;font-weight:bold;">>> HACK COMPLETE</div>
+      <div class="panel-line green">>> VIRUS PAYLOAD READY</div>
+      <div class="panel-line" style="height:8px;"></div>
+      <div class="panel-line white pulse" style="font-size:13px;">[ HIT ENTER TO UPLOAD VIRUS ]</div>
+      <div class="panel-line" style="height:8px;"></div>
+    `;
+    spawnSpecialPanel(html);
+  }
+}
+
+// Phase 4: Virus Upload
+function initPhase4() {
+  state.phase = PHASE.UPLOAD;
+  state.uploadPct = 0;
+  state.keypressCount = 0;
+  state.nextPanelAt = randInt(...CONFIG.PANEL_INTERVAL);
+
+  // Remove the special panel
+  document.querySelectorAll('.hacker-panel.special').forEach(p => p.remove());
+
+  // Show upload bar
+  document.getElementById('upload-bar').style.display = 'flex';
+  terminal.classList.remove('with-status');
+  terminal.classList.add('with-upload');
+  updateUploadBar();
+
+  state.uploadTypingEnabled = false;
+
+  addLine('');
+  addLine('>> INITIATING BLACKOUT.EXE UPLOAD SEQUENCE', 'line-red');
+  addLine('>> UPLOADING TO NEXIDYNE OBSIDIAN MAINFRAME...', 'line-red');
+  addLine('>> MONITORING CONNECTION... STANDBY...', 'line-amber');
+  addLine('');
+
+  // Auto-increment upload
+  state.uploadInterval = setInterval(() => {
+    const rate = state.uploadThrottled ? CONFIG.UPLOAD_THROTTLED_AUTO : CONFIG.UPLOAD_AUTO_RATE;
+    state.uploadPct += rate;
+    checkUploadMilestones();
+    updateUploadBar();
+    if (state.uploadPct >= 100) {
+      clearInterval(state.uploadInterval);
+      initPhase5();
+    }
+  }, 500);
+}
+
+function checkUploadMilestones() {
+  if (!state.milestone20 && state.uploadPct >= 20) {
+    state.milestone20 = true;
+    state.uploadThrottled = true;
+    state.uploadTypingEnabled = true;
+    const html = `
+      <div class="panel-header" style="color:var(--red);">!! ALERT !!</div>
+      <div class="panel-line" style="height:4px;"></div>
+      <div class="panel-line red" style="font-weight:bold;">NEXIDYNE SECURITY ACTIVATED</div>
+      <div class="panel-line red">>> FIREWALL COUNTERMEASURES ONLINE</div>
+      <div class="panel-line red">>> UPLOAD SPEED THROTTLED</div>
+      <div class="panel-line" style="height:4px;"></div>
+      <div class="panel-line amber" style="font-weight:bold;">>> KEEP HACKING TO OVERRIDE</div>
+    `;
+    spawnAlertPanel(html);
+    addLine('!! NEXIDYNE SECURITY COUNTERMEASURES ACTIVATED !!', 'line-red');
+    addLine('>> Upload throttled. Keep hacking to push through.', 'line-amber');
+  }
+  if (!state.milestone60 && state.uploadPct >= 60) {
+    state.milestone60 = true;
+    const html = `
+      <div class="panel-header" style="color:var(--amber);">WARNING</div>
+      <div class="panel-line" style="height:4px;"></div>
+      <div class="panel-line amber" style="font-weight:bold;">>> TRACE ALGORITHM CLOSING IN</div>
+      <div class="panel-line amber">>> NEXIDYNE KNOWS YOUR LOCATION</div>
+      <div class="panel-line" style="height:4px;"></div>
+      <div class="panel-line white pulse" style="font-weight:bold;">>> HACK FASTER</div>
+    `;
+    spawnAlertPanel(html);
+    addLine('>> WARNING: Trace algorithm at critical level!', 'line-amber');
+    addLine('>> HACK FASTER!', 'line-amber');
+  }
+  if (!state.milestone85 && state.uploadPct >= 85) {
+    state.milestone85 = true;
+    document.body.classList.add('glitching');
+    addLine('>> SYSTEM DESTABILIZING... HOLD ON...', 'line-red');
+  }
+}
+
+function handleUploadInput(e) {
+  if (e.repeat) return;
+  if (e.key === 'Meta' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Shift') return;
+  if (!['F5', 'F12'].includes(e.key)) e.preventDefault();
+
+  // Typing is blocked until the 20% security alert fires
+  if (!state.uploadTypingEnabled) return;
+
+  state.keypressCount++;
+
+  // Boost upload
+  const boostRange = state.uploadThrottled ? CONFIG.UPLOAD_THROTTLED_BOOST : CONFIG.UPLOAD_KEY_BOOST;
+  state.uploadPct += randFloat(...boostRange);
+  updateUploadBar();
+  checkUploadMilestones();
+
+  if (state.uploadPct >= 100) {
+    clearInterval(state.uploadInterval);
+    initPhase5();
+    return;
+  }
+
+  // Hacker text - use upload-specific lines more often
+  const pools = state.uploadThrottled
+    ? [UPLOAD_LINES, UPLOAD_LINES, HACK_LINES, EXPLOIT_LINES]
+    : [HACK_LINES, FS_LINES, EXPLOIT_LINES, UPLOAD_LINES];
+  addHackerText(pools);
+
+  // Panels
+  if (state.keypressCount >= state.nextPanelAt) {
+    spawnPanel();
+    state.nextPanelAt = state.keypressCount + randInt(...CONFIG.PANEL_INTERVAL);
+  }
+}
+
+// Phase 5: Victory
+function initPhase5() {
+  state.phase = PHASE.VICTORY;
+  document.body.classList.remove('glitching');
+  if (state.uploadInterval) clearInterval(state.uploadInterval);
+
+  // Remove all panels
+  document.getElementById('panels-container').innerHTML = '';
+  state.activePanels = 0;
+
+  // White flash
+  const flash = document.createElement('div');
+  flash.className = 'white-flash';
+  document.body.appendChild(flash);
+
+  setTimeout(() => {
+    flash.remove();
+
+    // Hide everything
+    document.getElementById('status-bar').style.display = 'none';
+    document.getElementById('upload-bar').style.display = 'none';
+    terminal.style.display = 'none';
+
+    // Show victory screen
+    const vs = document.getElementById('victory-screen');
+    vs.style.display = 'flex';
+    vs.querySelector('.victory-name').textContent = `Thank you, ${state.playerName}.`;
+    vs.querySelector('.skull').textContent = SKULL_ART;
+
+    // Spawn falling debris particles
+    spawnDebris();
+  }, 2000);
+}
+
+const SKULL_ART = `
+      ████████████████
+    ██                ██
+  ██    ██        ██    ██
+  ██    ██        ██    ██
+  ██                    ██
+  ██      ████████      ██
+   ██  ██  ██  ██  ██
+    ██  ██  ██  ██
+     ██████████
+`;
+
+function spawnDebris() {
+  for (let i = 0; i < 40; i++) {
+    setTimeout(() => {
+      const particle = document.createElement('div');
+      particle.className = 'debris';
+      particle.style.left = randInt(0, 100) + 'vw';
+      particle.style.top = '-4px';
+      particle.style.width = randInt(1, 3) + 'px';
+      particle.style.height = randInt(1, 3) + 'px';
+      particle.style.animationDuration = randFloat(3, 8) + 's';
+      particle.style.animationDelay = '0s';
+      if (Math.random() > 0.5) particle.style.background = 'var(--cyan)';
+      document.body.appendChild(particle);
+      setTimeout(() => particle.remove(), 10000);
+    }, i * 200);
+  }
+}
+
+// ─── MAIN EVENT LISTENER ────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  switch (state.phase) {
+    case PHASE.NAME: handleNameInput(e); break;
+    case PHASE.EMAIL: handleEmailInput(e); break;
+    case PHASE.HACK: handleHackInput(e); break;
+    case PHASE.UPLOAD: handleUploadInput(e); break;
+    case PHASE.VICTORY: break;
+  }
+});
+
+// ─── INIT ───────────────────────────────────────────────
+initPhase1();
+</script>
+</body>
+</html>
