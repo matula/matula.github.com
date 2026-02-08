@@ -399,6 +399,33 @@ body.glitching {
   0% { opacity: 1; transform: translateY(0) rotate(0deg); }
   100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
 }
+#mobile-input {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  border: none;
+  outline: none;
+  padding: 0;
+  font-size: 16px;
+}
+#tap-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.85);
+  justify-content: center;
+  align-items: center;
+  font-family: 'Courier New', Consolas, Monaco, monospace;
+  font-size: 20px;
+  color: var(--cyan);
+  text-shadow: var(--glow-cyan);
+  cursor: pointer;
+}
+#tap-overlay span { animation: pulse 1.5s ease-in-out infinite; }
 </style>
 </head>
 <body>
@@ -413,6 +440,9 @@ body.glitching {
   <span class="upload-pct" id="upload-pct">0%</span>
 </div>
 <div id="terminal"></div>
+<input id="mobile-input" type="text" autocomplete="off" autocorrect="off"
+       autocapitalize="off" spellcheck="false" aria-hidden="true">
+<div id="tap-overlay"><span>TAP ANYWHERE TO BEGIN</span></div>
 <div id="panels-container"></div>
 <div id="victory-screen">
   <div class="skull"></div>
@@ -1482,7 +1512,10 @@ function spawnDebris() {
 }
 
 // ─── MAIN EVENT LISTENER ────────────────────────────────
+let lastKeydownTime = 0;
+
 document.addEventListener('keydown', (e) => {
+  if (e.key && e.key.length === 1) lastKeydownTime = Date.now();
   switch (state.phase) {
     case PHASE.NAME: handleNameInput(e); break;
     case PHASE.EMAIL: handleEmailInput(e); break;
@@ -1491,6 +1524,62 @@ document.addEventListener('keydown', (e) => {
     case PHASE.VICTORY: break;
   }
 });
+
+// ─── MOBILE INPUT BRIDGE ───────────────────────────────
+const mobileInput = document.getElementById('mobile-input');
+const tapOverlay = document.getElementById('tap-overlay');
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+function focusMobileInput() {
+  if (state.phase !== PHASE.VICTORY) {
+    mobileInput.focus({ preventScroll: true });
+  }
+}
+
+// Handle character input from mobile keyboard
+mobileInput.addEventListener('input', (e) => {
+  const data = e.data;
+  mobileInput.value = '';
+  if (!data) return;
+  // Skip if keydown already handled this character (desktop)
+  if (Date.now() - lastKeydownTime < 80) return;
+  for (const char of data) {
+    const synth = { key: char, preventDefault() {}, repeat: false };
+    switch (state.phase) {
+      case PHASE.NAME: handleNameInput(synth); break;
+      case PHASE.HACK: handleHackInput(synth); break;
+      case PHASE.UPLOAD: handleUploadInput(synth); break;
+    }
+  }
+});
+
+// Handle backspace from mobile (deleteContentBackward)
+mobileInput.addEventListener('beforeinput', (e) => {
+  if (e.inputType === 'deleteContentBackward') {
+    if (Date.now() - lastKeydownTime < 80) return;
+    const synth = { key: 'Backspace', preventDefault() {}, repeat: false };
+    if (state.phase === PHASE.NAME) handleNameInput(synth);
+  }
+});
+
+if (isTouchDevice) {
+  tapOverlay.style.display = 'flex';
+  tapOverlay.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    tapOverlay.style.display = 'none';
+    focusMobileInput();
+  });
+  document.addEventListener('touchstart', () => {
+    if (tapOverlay.style.display !== 'none') return;
+    focusMobileInput();
+  });
+  mobileInput.addEventListener('blur', () => {
+    // Re-focus after a short delay if game is still active
+    if (state.phase !== PHASE.VICTORY) {
+      setTimeout(focusMobileInput, 100);
+    }
+  });
+}
 
 // ─── INIT ───────────────────────────────────────────────
 initPhase1();
