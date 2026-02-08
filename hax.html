@@ -401,15 +401,16 @@ body.glitching {
 }
 #mobile-input {
   position: fixed;
-  left: -9999px;
-  top: 0;
-  width: 1px;
+  bottom: 0;
+  left: 0;
+  width: 100%;
   height: 1px;
   opacity: 0;
   border: none;
   outline: none;
   padding: 0;
   font-size: 16px;
+  z-index: -1;
 }
 #tap-overlay {
   display: none;
@@ -1551,6 +1552,7 @@ mobileInput.addEventListener('input', (e) => {
       case PHASE.UPLOAD: handleUploadInput(synth); break;
     }
   }
+  terminal.scrollTop = terminal.scrollHeight;
 });
 
 // Handle backspace from mobile (deleteContentBackward)
@@ -1572,12 +1574,6 @@ if (isTouchDevice) {
   document.addEventListener('touchstart', () => {
     if (tapOverlay.style.display !== 'none') return;
     focusMobileInput();
-  });
-  mobileInput.addEventListener('blur', () => {
-    // Re-focus after a short delay if game is still active
-    if (state.phase !== PHASE.VICTORY) {
-      setTimeout(focusMobileInput, 100);
-    }
   });
 }
 
