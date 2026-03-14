@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Epic Fury</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        p.description {
+            margin-bottom: 20px;
+            line-height: 1.5;
+            font-size: 14px;
+            color: #888;
+        }
+        .total-box {
+            background-color: #27ae60;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 48px;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+        .details {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+        .unlockable-box {
+            background-color: #fcf8e3;
+            border: 1px solid #faebcc;
+            color: #8a6d3b;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 15px;
+            text-align: left;
+            min-height: 24px;
+        }
+        .unlockable-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            border-bottom: 1px solid #faebcc;
+            padding-bottom: 5px;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Operation Epic Fury</h1>
+    <p class="description">Based on an <a href="https://www.forbes.com/sites/alisondurkee/2026/03/10/why-trumps-war-with-iran-is-costing-nearly-1-billion-a-day-at-least/" target="_blank">average</a> of <a href="https://www.cbsnews.com/news/iran-war-cost-first-week-military-congress/" target="_blank">estimated</a> <a href="https://www.cnn.com/2026/03/06/politics/us-war-iran-cost" target="_blank">cost</a> <a href="https://www.usatoday.com/story/news/politics/2026/03/11/cost-of-us-iran-war/89082840007/" target="_blank">per</a> <a href="https://www.nbcnews.com/politics/congress/first-6-days-iran-war-cost-11-billion-pentagon-tells-senators-rcna263060" target="_blank">day</a>, if we had given that money to the American people, here's how much you would've received:</p>
+
+    <div class="total-box" id="runningTotal">$0.0000</div>
+
+    <div class="details">
+        Start Date: Feb 28, 2026 (1:15 AM EST)
+    </div>
+
+    <div class="unlockable-box" id="unlockDisplay">
+        Loading your haul...
+    </div>
+</div>
+
+<script>
+    const startDate = new Date("2026-02-28T01:15:00-05:00").getTime();
+
+    const CSIestimate = 900000000;
+    const SenatorEstimate = 1500000000;
+    const dailySpend = (CSIestimate + SenatorEstimate) / 2;
+    const population = 174000000;
+    const perPersonPerDay = dailySpend / population;
+    const perPersonPerSecond = perPersonPerDay / 86400;
+
+    // items sort highest price to lowest
+    const storeItems = [
+        { amount: 1500, name: "Month's rent" },
+        { amount: 800, name: "New flagship smartphone" },
+        { amount: 500, name: "PlayStation 5" },
+        { amount: 350, name: "Nintendo Switch" },
+        { amount: 250, name: "Wireless noise-canceling earbuds" },
+        { amount: 150, name: "Fancy dinner for two" },
+        { amount: 100, name: "Solid pair of running shoes" },
+        { amount: 60, name: "Full tank of gas" },
+        { amount: 35, name: "Movie ticket + large popcorn" },
+        { amount: 15, name: "Month of Netflix" },
+        { amount: 5, name: "Fancy iced coffee" },
+        { amount: 1, name: "Dollar slice of pizza" }
+    ];
+
+    function updateCounter() {
+        const now = new Date().getTime();
+
+        // seconds since the start date
+        const secondsElapsed = (now - startDate) / 1000;
+        const totalOwed = secondsElapsed * perPersonPerSecond;
+
+        document.getElementById("runningTotal").innerText = "$" + totalOwed.toFixed(5);
+
+        // "Shopping Cart" stuff
+        let remainingBalance = totalOwed;
+        let purchasedItems = [];
+
+        for (let i = 0; i < storeItems.length; i++) {
+            let item = storeItems[i];
+
+            if (remainingBalance >= item.amount) {
+                let quantity = Math.floor(remainingBalance / item.amount);
+                purchasedItems.push(`<li><b>${quantity}x</b> ${item.name} <i>($${item.amount} ea)</i></li>`);
+                remainingBalance -= (quantity * item.amount);
+            }
+        }
+
+        let outputHTML = `<div class="unlockable-title">With this money, you could have bought:</div>`;
+
+        if (purchasedItems.length > 0) {
+            outputHTML += `<ul>${purchasedItems.join("")}</ul>`;
+            if (remainingBalance > 0) {
+                outputHTML += `<div style="margin-top: 10px; font-size: 12px; color: #b89047; text-align: center;">...plus $${remainingBalance.toFixed(2)} in loose change.</div>`;
+            }
+        } else {
+            outputHTML += `<div style="text-align:center;">Waiting for your first dollar...</div>`;
+        }
+
+        document.getElementById("unlockDisplay").innerHTML = outputHTML;
+    }
+
+    updateCounter();
+    setInterval(updateCounter, 125);
+</script>
+</body>
+</html>
