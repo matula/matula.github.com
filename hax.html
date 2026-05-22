@@ -274,6 +274,24 @@ body {
   100% { opacity: 0; transform: scale(0.95) translateY(5px); }
 }
 
+/* Centered panel variant — keeps the -50%/-50% offset throughout the animation */
+.hacker-panel.centered {
+  left: 50%;
+  top: 30%;
+  animation: panelInCentered 0.3s ease-out forwards;
+}
+.hacker-panel.centered.dismissing {
+  animation: panelOutCentered 0.6s ease-in forwards;
+}
+@keyframes panelInCentered {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes panelOutCentered {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+}
+
 /* Full-screen flash */
 .screen-flash {
   position: fixed;
@@ -492,7 +510,6 @@ const state = {
   milestone60: false,
   milestone85: false,
   uploadTypingEnabled: false,
-  panelCleanups: [],
 };
 
 // ─── TEXT POOLS ─────────────────────────────────────────
@@ -687,16 +704,6 @@ function addLine(text, cls = 'line-cyan') {
   return div;
 }
 
-function addLineHTML(html, cls = 'line-cyan') {
-  const div = document.createElement('div');
-  div.className = `line ${cls}`;
-  div.innerHTML = html;
-  terminal.appendChild(div);
-  lineCount++;
-  terminal.scrollTop = terminal.scrollHeight;
-  return div;
-}
-
 function clearTerminal() {
   terminal.innerHTML = '';
   lineCount = 0;
@@ -706,7 +713,6 @@ function clearTerminal() {
 const charBuffer = {
   queue: '',       // remaining characters to output for current line
   lineEl: null,    // current DOM element being typed into
-  pools: null,     // current pool set
 };
 
 function pickLineColor() {
@@ -735,7 +741,6 @@ function startNewBufferLine(pools) {
 }
 
 function addHackerText(pools) {
-  charBuffer.pools = pools;
   let charsToAdd = randInt(...CONFIG.CHARS_PER_KEY);
 
   while (charsToAdd > 0) {
@@ -816,6 +821,8 @@ function typewriterMultiline(lines, callback) {
 // ─── PANELS ─────────────────────────────────────────────
 function spawnPanel() {
   if (state.activePanels >= CONFIG.MAX_PANELS) return;
+  // Skip popup panels on narrow viewports — they'd overflow or cover the terminal
+  if (window.innerWidth < 720) return;
 
   const panel = document.createElement('div');
   panel.className = 'hacker-panel';
@@ -839,9 +846,10 @@ function spawnPanel() {
     buildMatrixPanel,
   ]);
 
-  const { html, cleanup } = builder();
+  const { html, init, cleanup } = builder();
   panel.innerHTML = html;
   document.getElementById('panels-container').appendChild(panel);
+  if (init) init(panel);
   state.activePanels++;
 
   const lifetime = randInt(...CONFIG.PANEL_LIFETIME);
@@ -857,10 +865,7 @@ function spawnPanel() {
 
 function spawnSpecialPanel(html, extraClass = 'special') {
   const panel = document.createElement('div');
-  panel.className = `hacker-panel ${extraClass}`;
-  panel.style.left = '50%';
-  panel.style.top = '30%';
-  panel.style.transform = 'translate(-50%, -50%)';
+  panel.className = `hacker-panel centered ${extraClass}`;
   panel.innerHTML = html;
   document.getElementById('panels-container').appendChild(panel);
   return panel;
@@ -933,7 +938,6 @@ function buildConnectionPanel() {
 }
 
 function buildPasswordPanel() {
-  const el = document.createElement('div');
   let attempts = 0;
   const maxAttempts = randInt(8, 15);
 
@@ -951,24 +955,16 @@ function buildPasswordPanel() {
     <div class="panel-line pass-result" style="display:none;"></div>
   `;
 
-  // We need to return html as string but also set up an interval after DOM insertion
-  // So we'll use a slightly different approach
-  const wrapper = { html, cleanup: null };
-
-  // Use MutationObserver or just setTimeout to find and animate
-  const intervalId = { id: null };
-  setTimeout(() => {
-    const panels = document.querySelectorAll('.hacker-panel');
-    const lastPanel = panels[panels.length - 1];
-    if (!lastPanel) return;
-    const attemptEl = lastPanel.querySelector('.pass-attempt');
-    const resultEl = lastPanel.querySelector('.pass-result');
+  let intervalId = null;
+  const init = (panel) => {
+    const attemptEl = panel.querySelector('.pass-attempt');
+    const resultEl = panel.querySelector('.pass-result');
     if (!attemptEl) return;
 
-    intervalId.id = setInterval(() => {
+    intervalId = setInterval(() => {
       attempts++;
       if (attempts >= maxAttempts) {
-        clearInterval(intervalId.id);
+        clearInterval(intervalId);
         attemptEl.textContent = `Trying: ${randomPass()}... MATCH`;
         attemptEl.classList.add('green');
         if (resultEl) {
@@ -980,10 +976,10 @@ function buildPasswordPanel() {
         attemptEl.textContent = `Trying: ${randomPass()}... FAIL`;
       }
     }, 200);
-  }, 50);
+  };
 
-  wrapper.cleanup = () => { if (intervalId.id) clearInterval(intervalId.id); };
-  return wrapper;
+  const cleanup = () => { if (intervalId) clearInterval(intervalId); };
+  return { html, init, cleanup };
 }
 
 function buildRadarPanel() {
@@ -1028,38 +1024,30 @@ function buildMatrixPanel() {
   const cols = 24;
   const matrixChars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF';
 
-  let gridHTML = '';
-  for (let r = 0; r < rows; r++) {
+  function randomRow() {
     let row = '';
     for (let c = 0; c < cols; c++) {
       row += matrixChars[randInt(0, matrixChars.length - 1)];
     }
-    gridHTML += `<div class="panel-line" style="color:#00ff41;opacity:0.7;font-size:11px;letter-spacing:2px;line-height:1.2;">${row}</div>`;
+    return row;
+  }
+
+  let gridHTML = '';
+  for (let r = 0; r < rows; r++) {
+    gridHTML += `<div class="panel-line matrix-row" style="color:#00ff41;opacity:0.7;font-size:11px;letter-spacing:2px;line-height:1.2;">${randomRow()}</div>`;
   }
 
   const html = `<div class="panel-header">DATA STREAM</div>${gridHTML}`;
 
-  const intervalId = { id: null };
-  setTimeout(() => {
-    const panels = document.querySelectorAll('.hacker-panel');
-    const lastPanel = panels[panels.length - 1];
-    if (!lastPanel) return;
-    const lines = lastPanel.querySelectorAll('.panel-line:not(.panel-header ~ .panel-header)');
-    // Actually select the green lines
-    const greenLines = lastPanel.querySelectorAll('.panel-line[style*="00ff41"]');
-
-    intervalId.id = setInterval(() => {
-      greenLines.forEach(line => {
-        let row = '';
-        for (let c = 0; c < cols; c++) {
-          row += matrixChars[randInt(0, matrixChars.length - 1)];
-        }
-        line.textContent = row;
-      });
+  let intervalId = null;
+  const init = (panel) => {
+    const greenLines = panel.querySelectorAll('.matrix-row');
+    intervalId = setInterval(() => {
+      greenLines.forEach(line => { line.textContent = randomRow(); });
     }, 100);
-  }, 50);
+  };
 
-  return { html, cleanup: () => { if (intervalId.id) clearInterval(intervalId.id); } };
+  return { html, init, cleanup: () => { if (intervalId) clearInterval(intervalId); } };
 }
 
 // ─── STATUS BAR ─────────────────────────────────────────
@@ -1132,6 +1120,7 @@ function handleNameInput(e) {
   }
   if (key.length === 1) {
     e.preventDefault();
+    if (state.playerName.length >= 24) return;
     state.playerName += key;
     nameInputEl.textContent = state.playerName;
   }
@@ -1253,7 +1242,7 @@ function initPhase2() {
 
 function handleEmailInput(e) {
   if (e.repeat) return;
-  e.preventDefault();
+  if (!['F5', 'F12'].includes(e.key)) e.preventDefault();
   if (!state.emailDone) return;
   if (e.key === 'Enter') {
     initPhase3();
