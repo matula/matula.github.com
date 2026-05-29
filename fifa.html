@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Cup 2026 — Picks & Tracker</title>
+  <meta name="description" content="Predict the 2026 FIFA World Cup bracket and track real-time results.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:           #0a0e1a;
+      --bg-elev-1:    #121728;
+      --bg-elev-2:    #1a2138;
+      --border:       #232b44;
+      --border-soft:  #1c2238;
+      --text:         #eef0f8;
+      --text-mute:    #8a92ac;
+      --text-dim:     #5e667e;
+      --accent:       #00e6a8;
+      --accent-dim:   #007a59;
+      --magenta:      #ff3d8b;
+      --gold:         #ffcc4d;
+      --red:          #ff5b6b;
+      --r-sm: 6px; --r-md: 10px; --r-lg: 16px;
+      --shadow-1: 0 1px 0 rgba(255,255,255,.04) inset, 0 8px 24px rgba(0,0,0,.4);
+      --display: 'Bebas Neue', 'Oswald', system-ui, sans-serif;
+      --body:    'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --mono:    'JetBrains Mono', ui-monospace, Menlo, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: var(--body);
+      background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(0,230,168,.08), transparent 60%),
+        radial-gradient(1000px 500px at -10% 10%, rgba(255,61,139,.06), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ───────────── Layout ───────────── */
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+    }
+
+    /* ───────────── Header ───────────── */
+    header.app__head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: end;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border-soft);
+      margin-bottom: 20px;
+    }
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .brand__title {
+      font-family: var(--display);
+      font-size: clamp(40px, 6vw, 72px);
+      line-height: .9;
+      letter-spacing: .02em;
+      margin: 0;
+      background: linear-gradient(180deg, #fff, #8a92ac);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand__sub {
+      font-family: var(--display);
+      font-size: clamp(20px, 2.5vw, 28px);
+      letter-spacing: .08em;
+      color: var(--accent);
+      margin: 0;
+    }
+    .meta {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      color: var(--text-mute);
+      font-size: 13px;
+    }
+    .meta__pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-elev-1);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+    }
+    .meta__pill strong {
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+    .pulse {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 0 var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(0,230,168,.5); }
+      70%  { box-shadow: 0 0 0 10px rgba(0,230,168,0); }
+      100% { box-shadow: 0 0 0 0 rgba(0,230,168,0); }
+    }
+
+    /* ───────────── Help button + modal ───────────── */
+    .help-btn {
+      width: 32px; height: 32px;
+      padding: 0;
+      border-radius: 50%;
+      background: var(--bg-elev-1);
+      border: 1px solid var(--border);
+      color: var(--text-mute);
+      font-family: var(--display);
+      font-size: 20px;
+      font-weight: 400;
+      line-height: 1;
+      cursor: pointer;
+      transition: color .15s, border-color .15s, background .15s, transform .15s;
+    }
+    .help-btn:hover {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(0,230,168,.10);
+      transform: scale(1.05);
+    }
+    .help-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 18, .82);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      z-index: 200;
+      padding: 40px 16px;
+      overflow-y: auto;
+    }
+    .modal-backdrop.is-open { display: flex; animation: fadeIn .15s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal {
+      background: linear-gradient(180deg, var(--bg-elev-1), var(--bg-elev-2));
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      max-width: 580px;
+      width: 100%;
+      padding: 28px 28px 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+      animation: slideUp .2s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(8px); opacity: 0; }
+      to   { transform: translateY(0);   opacity: 1; }
+    }
+    .modal__head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .modal__title {
+      font-family: var(--display);
+      font-size: 32px;
+      letter-spacing: .04em;
+      margin: 0;
+    }
+    .modal__close {
+      background: transparent;
+      border: 0;
+      color: var(--text-mute);
+      font-size: 26px;
+      line-height: 1;
+      padding: 4px 10px;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+    }
+    .modal__close:hover { color: var(--text); background: rgba(255,255,255,.06); }
+    .modal__body { color: var(--text-mute); font-size: 14px; line-height: 1.6; }
+    .modal__body h3 {
+      font-family: var(--display);
+      font-size: 18px;
+      letter-spacing: .08em;
+      color: var(--accent);
+      margin: 18px 0 6px;
+    }
+    .modal__body h3:first-child { margin-top: 0; }
+    .modal__body p { margin: 0 0 10px; }
+    .modal__body strong { color: var(--text); }
+    .modal__body code {
+      font-family: var(--mono);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--text);
+    }
+    .modal__body dl.scoring {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px 16px;
+      margin: 4px 0 12px;
+    }
+    .modal__body dl.scoring dt { color: var(--text); font-size: 13px; }
+    .modal__body dl.scoring dd {
+      margin: 0;
+      font-family: var(--mono);
+      font-weight: 700;
+      color: var(--accent);
+      text-align: right;
+    }
+
+    /* ───────────── Tabs ───────────── */
+    nav.tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border-soft);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    nav.tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      background: transparent;
+      border: 0;
+      color: var(--text-mute);
+      font-family: var(--display);
+      font-size: 18px;
+      letter-spacing: .08em;
+      padding: 14px 18px;
+      border-bottom: 2px solid transparent;
+      transition: color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .tab:hover { color: var(--text); }
+    .tab[aria-current="page"] {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ───────────── Groups grid ───────────── */
+    .groups {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .group {
+      background: linear-gradient(180deg, var(--bg-elev-1), var(--bg-elev-2));
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 16px 16px 14px;
+      box-shadow: var(--shadow-1);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .group__head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .group__name {
+      font-family: var(--display);
+      font-size: 28px;
+      letter-spacing: .04em;
+      margin: 0;
+    }
+    .group__name span { color: var(--accent); }
+    .group__matchday {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      table-layout: fixed;
+    }
+    .table col.col-team { width: auto; }
+    .table col.col-stat { width: 32px; }
+    .table col.col-pts  { width: 38px; }
+    .table th {
+      text-align: right;
+      font-weight: 500;
+      color: var(--text-dim);
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 6px 6px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .table th:first-child, .table td:first-child { text-align: left; }
+    .table td {
+      padding: 8px 6px;
+      border-bottom: 1px solid var(--border-soft);
+      color: var(--text-mute);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .table tr:last-child td { border-bottom: 0; }
+    .table .team {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text);
+      min-width: 0;
+      position: relative;
+      padding-left: 10px;
+    }
+    .table .team::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 50%;
+      transform: translateY(-50%);
+      width: 3px; height: 16px;
+      border-radius: 2px;
+      background: transparent;
+    }
+    .table tr[data-pos="1"] .team::before,
+    .table tr[data-pos="2"] .team::before {
+      background: var(--accent);
+    }
+    .table tr[data-pos="3"] .team::before {
+      background: var(--gold);
+      opacity: .55;
+    }
+    .table .team img {
+      width: 20px; height: 20px;
+      object-fit: contain;
+      flex: none;
+    }
+    .table .team__name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+    .table .pts {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ───────────── Match list (inside group card) ───────────── */
+    .fixtures {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .fixture {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 8px 10px;
+      background: rgba(255,255,255,.025);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--r-md);
+      font-size: 13px;
+    }
+    .fixture__when {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .04em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    .fixture__matchup {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+    }
+    .fixture__side {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      justify-self: start;
+    }
+    .fixture__side--away {
+      justify-self: end;
+      flex-direction: row-reverse;
+    }
+    .fixture__side img {
+      width: 20px; height: 20px;
+      object-fit: contain;
+      flex: none;
+    }
+    .fixture__tla {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: .02em;
+    }
+    .fixture__vs {
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .fixture__vs.score {
+      font-family: var(--body);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -.02em;
+    }
+    .fixture[data-status="IN_PLAY"] .fixture__vs,
+    .fixture[data-status="PAUSED"]  .fixture__vs { color: var(--accent); }
+    .fixture[data-status="IN_PLAY"] .fixture__when::after {
+      content: ' · LIVE';
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .fixture[data-status="FINISHED"] { opacity: .92; }
+    .fixture[data-status="FINISHED"] .fixture__when::after {
+      content: ' · FT';
+      color: var(--text-mute);
+    }
+
+    /* ───────────── Inline score picker ───────────── */
+    .picker-input {
+      width: 40px;
+      height: 30px;
+      padding: 0;
+      text-align: center;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 600;
+      transition: border-color .15s, background .15s;
+      -moz-appearance: textfield;
+    }
+    .picker-input::-webkit-outer-spin-button,
+    .picker-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .picker-input::placeholder { color: var(--text-dim); font-weight: 500; }
+    .picker-input:hover { border-color: var(--accent-dim); }
+    .picker-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: rgba(0,230,168,.06);
+    }
+    .picker-input.is-set {
+      background: rgba(0,230,168,.10);
+      border-color: var(--accent-dim);
+      color: var(--text);
+    }
+
+    /* ───────────── Pick row (under the matchup) ───────────── */
+    .fixture__pick {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 6px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border-soft);
+      min-height: 30px;
+    }
+    /* Editable variant: inputs aligned under their respective teams.
+       Mirrors the matchup grid (1fr auto 1fr) so column edges line up. */
+    .fixture__pick--inputs {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+    }
+    .fixture__pick--inputs input[data-side="home"] { justify-self: start; }
+    .fixture__pick--inputs input[data-side="away"] { justify-self: end; }
+    .fixture__pick--inputs .fixture__pick-label    { justify-self: center; }
+    .fixture__pick-label {
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+    .fixture__pick-value {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .fixture__pick-pts {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-mute);
+      letter-spacing: .04em;
+    }
+    .fixture__pick.is-positive .fixture__pick-pts { color: var(--accent); }
+    .fixture__pick.is-exact    .fixture__pick-pts { color: var(--gold); }
+
+    /* ───────────── Bracket view ───────────── */
+    .bracket {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Champion + 3rd place picker banner */
+    .finals-pick {
+      background:
+        radial-gradient(800px 200px at 80% 0%, rgba(255,204,77,.10), transparent 60%),
+        linear-gradient(180deg, var(--bg-elev-1), var(--bg-elev-2));
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-1);
+    }
+    .finals-pick__title {
+      font-family: var(--display);
+      font-size: 28px;
+      letter-spacing: .04em;
+      margin: 0 0 4px;
+      color: var(--text);
+    }
+    .finals-pick__sub {
+      font-size: 12px;
+      color: var(--text-mute);
+      margin: 0 0 16px;
+    }
+    .finals-pick__grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 600px) {
+      .finals-pick__grid { grid-template-columns: 1fr; }
+    }
+    .finals-pick__slot {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .finals-pick__label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+    .finals-pick__bonus {
+      font-family: var(--mono);
+      background: var(--accent-dim);
+      color: var(--text);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: .04em;
+    }
+    .finals-pick__slot--champion .finals-pick__bonus {
+      background: linear-gradient(135deg, var(--gold), #d99d2a);
+      color: #2a1f00;
+    }
+    .finals-pick__row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .finals-pick__crest {
+      width: 36px; height: 36px;
+      object-fit: contain;
+      flex: none;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .finals-pick__crest[src] { opacity: 1; }
+    .team-select {
+      flex: 1;
+      appearance: none;
+      background: rgba(255,255,255,.04) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='%238a92ac'><path d='M1 1l5 5 5-5' stroke='%238a92ac' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 12px center / 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--text);
+      font-family: var(--body);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 34px 10px 12px;
+      transition: border-color .15s, background-color .15s;
+      cursor: pointer;
+    }
+    .team-select:hover { border-color: var(--accent-dim); }
+    .team-select:focus { outline: none; border-color: var(--accent); }
+    .team-select option { background: var(--bg-elev-1); color: var(--text); }
+    .team-select.is-empty { color: var(--text-mute); font-style: italic; }
+
+    /* Stage section (R32, R16, QF, SF, 3rd, Final) */
+    .stage {
+      background: linear-gradient(180deg, var(--bg-elev-1), var(--bg-elev-2));
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-1);
+    }
+    .stage__head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .stage__name {
+      font-family: var(--display);
+      font-size: 26px;
+      letter-spacing: .04em;
+      margin: 0;
+      color: var(--accent);
+    }
+    .stage__count {
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .stage__matches {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .stage--final .stage__name,
+    .stage--third .stage__name { color: var(--gold); }
+
+    /* TBD fixture state (for knockout matches whose teams aren't set yet) */
+    .fixture.is-tbd { opacity: .65; }
+    .fixture.is-tbd .fixture__tla { color: var(--text-dim); font-style: italic; }
+    .fixture__pick--locked {
+      justify-content: center;
+      color: var(--text-dim);
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    /* ───────────── My Picks view ───────────── */
+    .picks { display: flex; flex-direction: column; gap: 16px; }
+
+    .picks__head {
+      background: linear-gradient(180deg, var(--bg-elev-1), var(--bg-elev-2));
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-1);
+      display: grid;
+      gap: 14px;
+    }
+    .picks__title {
+      font-family: var(--display);
+      font-size: 28px;
+      letter-spacing: .04em;
+      margin: 0;
+    }
+    .picks__stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text-mute);
+    }
+    .picks__stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
+    .picks__stat strong {
+      color: var(--text);
+      font-family: var(--mono);
+    }
+    .picks__stat img {
+      width: 14px; height: 14px; object-fit: contain;
+    }
+
+    .picks__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .btn {
+      font-family: var(--body);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: var(--r-sm);
+      transition: border-color .15s, background .15s, color .15s;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--text); background: rgba(0,230,168,.08); }
+    .btn--danger:hover { border-color: var(--red); background: rgba(255,91,107,.08); }
+    .btn--primary {
+      border-color: var(--accent-dim);
+      background: rgba(0,230,168,.10);
+    }
+
+    .picks__filters {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .filter-chip {
+      font-family: var(--body);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-mute);
+      padding: 6px 12px;
+      border-radius: 999px;
+      transition: color .15s, border-color .15s, background .15s;
+    }
+    .filter-chip:hover { color: var(--text); border-color: var(--accent-dim); }
+    .filter-chip[aria-current="true"] {
+      background: var(--accent-dim);
+      border-color: var(--accent-dim);
+      color: var(--text);
+    }
+
+    .picks__list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .pick-item {
+      display: grid;
+      grid-template-columns: 100px 1fr auto auto;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 14px;
+      background: var(--bg-elev-1);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--r-md);
+    }
+    .pick-item__when {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      line-height: 1.3;
+    }
+    .pick-item__matchup {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      font-size: 13px;
+    }
+    .pick-item__matchup img { width: 18px; height: 18px; object-fit: contain; flex: none; }
+    .pick-item__sep { color: var(--text-dim); }
+    .pick-item__tla { font-family: var(--mono); color: var(--text); }
+    .pick-item__pick {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .pick-item__pick--none { color: var(--text-dim); font-weight: 500; font-style: italic; }
+    .pick-item__pts {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: var(--text-mute);
+      min-width: 56px;
+      text-align: right;
+    }
+    .pick-item.is-positive .pick-item__pts { color: var(--accent); }
+    .pick-item.is-exact    .pick-item__pts { color: var(--gold); }
+
+    .picks__empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-mute);
+      border: 1px dashed var(--border);
+      border-radius: var(--r-lg);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--bg-elev-2);
+      border: 1px solid var(--accent-dim);
+      color: var(--text);
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s, transform .2s;
+      z-index: 100;
+    }
+    .toast.is-visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast--error { border-color: var(--red); }
+
+    @media (max-width: 600px) {
+      .pick-item {
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+          "when when"
+          "match pts"
+          "pick pick";
+      }
+      .pick-item__when    { grid-area: when; }
+      .pick-item__matchup { grid-area: match; }
+      .pick-item__pts     { grid-area: pts; }
+      .pick-item__pick    { grid-area: pick; text-align: right; }
+    }
+
+    /* ───────────── Placeholder views ───────────── */
+    .placeholder {
+      display: grid;
+      place-items: center;
+      min-height: 320px;
+      border: 1px dashed var(--border);
+      border-radius: var(--r-lg);
+      color: var(--text-mute);
+      text-align: center;
+      padding: 32px;
+    }
+    .placeholder h2 {
+      font-family: var(--display);
+      letter-spacing: .04em;
+      font-size: 32px;
+      color: var(--text);
+      margin: 0 0 8px;
+    }
+
+    /* ───────────── Loading / error ───────────── */
+    .status-wrap {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-mute);
+    }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .status-wrap.error { color: var(--red); }
+    .status-wrap.error code {
+      display: inline-block;
+      margin-top: 10px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-mute);
+      background: var(--bg-elev-1);
+      padding: 8px 12px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+    }
+
+    /* ───────────── Footer ───────────── */
+    footer.app__foot {
+      margin-top: 40px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-soft);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* ───────────── Responsive ───────────── */
+    @media (max-width: 600px) {
+      .app { padding: 16px 12px 60px; }
+      header.app__head {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+      .meta { flex-wrap: wrap; }
+      .groups { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <header class="app__head">
+      <div class="brand">
+        <h1 class="brand__title">World Cup '26</h1>
+        <p class="brand__sub">Picks &amp; Tracker</p>
+      </div>
+      <div class="meta">
+        <span class="meta__pill"><span class="pulse" aria-hidden="true"></span>Kicks off <strong id="countdown">…</strong></span>
+        <span class="meta__pill">Your points <strong id="points">—</strong></span>
+        <button id="help-btn" class="help-btn" type="button" aria-label="How this works">?</button>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab" data-view="groups"  aria-current="page">Groups</button>
+      <button class="tab" data-view="bracket">Bracket</button>
+      <button class="tab" data-view="picks">My Picks</button>
+    </nav>
+
+    <main id="view">
+      <div class="status-wrap" id="loading">
+        <div class="spinner" aria-hidden="true"></div>
+        <div>Loading tournament data…</div>
+      </div>
+    </main>
+
+    <footer class="app__foot">
+      <span id="fetched-at">—</span>
+    </footer>
+
+  </div>
+
+  <div class="modal-backdrop" id="help-modal" role="dialog" aria-labelledby="help-title" aria-hidden="true">
+    <div class="modal" role="document">
+      <header class="modal__head">
+        <h2 class="modal__title" id="help-title">How this works</h2>
+        <button class="modal__close" type="button" data-close-help aria-label="Close">×</button>
+      </header>
+      <div class="modal__body">
+        <h3>The gist</h3>
+        <p>Predict the 2026 FIFA World Cup. Pick scores for every match, lock in your Champion, and call who lifts the bronze. As real results come in, your picks score automatically.</p>
+
+        <h3>The three tabs</h3>
+        <p><strong>Groups</strong> — predict the final score of every group-stage match. Type a number into each side's box; it saves the instant you change it.</p>
+        <p><strong>Bracket</strong> — pick your <strong>Champion</strong> and <strong>3rd place</strong> right now from the dropdowns at the top. Knockout matches show as TBD until teams advance, then you can predict scores there too.</p>
+        <p><strong>My Picks</strong> — a scored list of every prediction you've made. Filter by stage, export to JSON, import a backup, share your bracket as a URL, or reset everything.</p>
+
+        <h3>Scoring</h3>
+        <dl class="scoring">
+          <dt>Exact score</dt>            <dd>+5</dd>
+          <dt>Correct goal difference</dt><dd>+3</dd>
+          <dt>Correct winner or draw</dt> <dd>+2</dd>
+          <dt>Wrong</dt>                  <dd>0</dd>
+          <dt>Champion bonus</dt>         <dd>+10</dd>
+          <dt>3rd-place bonus</dt>        <dd>+5</dd>
+        </dl>
+        <p>Your running total is the pill in the top-right. It stays <strong>—</strong> until the first match finishes.</p>
+
+        <h3>Sharing</h3>
+        <p>The <strong>Share URL</strong> button on My Picks encodes your full bracket into a link. Anyone who opens it gets prompted to import your picks.</p>
+
+        <h3>Storage</h3>
+        <p>Picks live in <code>localStorage</code> on this browser only — there's no account. Clearing site data wipes them, so use <strong>Export</strong> if you want a backup.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  /* ─────────────────────────────────────────────────────────────
+   *  FIFA — single-page picks & tracker for the 2026 World Cup.
+   *  Pure browser code. Reads same-origin JSON from /fifa-data/.
+   * ───────────────────────────────────────────────────────────── */
+  const FIFA = window.FIFA = {};
+
+  /* ─── config ─────────────────────────────────────────────── */
+  FIFA.config = {
+    dataPaths: {
+      teams:     'fifa-data/teams.json',
+      matches:   'fifa-data/matches.json',
+      standings: 'fifa-data/standings.json',
+      fetchedAt: 'fifa-data/fetched-at.json',
+    },
+    storagePrefix: 'fifa:v1:',
+    // Opening match — first ball of the tournament.
+    openingMatchUTC: '2026-06-11T19:00:00Z',
+  };
+
+  /* ─── data loader ────────────────────────────────────────── */
+  FIFA.data = (() => {
+    async function loadJSON(path) {
+      const res = await fetch(path, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`${path} → HTTP ${res.status}`);
+      return res.json();
+    }
+    async function loadAll() {
+      const [teams, matches, standings, fetchedAt] = await Promise.all([
+        loadJSON(FIFA.config.dataPaths.teams),
+        loadJSON(FIFA.config.dataPaths.matches),
+        loadJSON(FIFA.config.dataPaths.standings),
+        loadJSON(FIFA.config.dataPaths.fetchedAt),
+      ]);
+      return { teams, matches, standings, fetchedAt };
+    }
+    return { loadAll };
+  })();
+
+  /* ─── storage (predictions + bracket) ────────────────────── */
+  FIFA.storage = (() => {
+    const PRED_KEY    = FIFA.config.storagePrefix + 'predictions';
+    const BRACKET_KEY = FIFA.config.storagePrefix + 'bracket';
+    let predCache = null;
+    let bracketCache = null;
+
+    function getAll() {
+      if (predCache) return predCache;
+      try { predCache = JSON.parse(localStorage.getItem(PRED_KEY)) || {}; }
+      catch { predCache = {}; }
+      return predCache;
+    }
+    function get(id) { return getAll()[id]; }
+    function set(id, prediction) {
+      const all = getAll();
+      if (prediction == null) delete all[id];
+      else all[id] = prediction;
+      localStorage.setItem(PRED_KEY, JSON.stringify(all));
+    }
+
+    function getBracket() {
+      if (bracketCache) return bracketCache;
+      try { bracketCache = JSON.parse(localStorage.getItem(BRACKET_KEY)) || {}; }
+      catch { bracketCache = {}; }
+      return bracketCache;
+    }
+    function setBracket(b) {
+      bracketCache = b;
+      localStorage.setItem(BRACKET_KEY, JSON.stringify(b));
+    }
+
+    return { getAll, get, set, getBracket, setBracket };
+  })();
+
+  /* ─── scoring (pure) ─────────────────────────────────────── */
+  FIFA.scoring = (() => {
+    // Kicktipp-style ladder, per FIFA_PLAN.md §6.
+    const RULES = {
+      exact: 5, goalDiff: 3, winner: 2,
+      championBonus: 10, thirdPlaceBonus: 5,
+    };
+
+    function scoreMatch(pred, actual) {
+      if (!pred || !actual) return 0;
+      const ph = pred.home, pa = pred.away;
+      const ah = actual.home, aa = actual.away;
+      if (ph == null || pa == null || ah == null || aa == null) return 0;
+      if (ph === ah && pa === aa)          return RULES.exact;
+      if (ph - pa === ah - aa)             return RULES.goalDiff;
+      const pW = ph > pa ? 'H' : ph < pa ? 'A' : 'D';
+      const aW = ah > aa ? 'H' : ah < aa ? 'A' : 'D';
+      if (pW === aW)                       return RULES.winner;
+      return 0;
+    }
+
+    function matchWinnerId(m) {
+      const w = m.score?.winner;
+      if (w === 'HOME_TEAM') return m.homeTeam.id;
+      if (w === 'AWAY_TEAM') return m.awayTeam.id;
+      return null;
+    }
+
+    function totalPoints() {
+      if (!FIFA.state.raw) return 0;
+      const preds   = FIFA.storage.getAll();
+      const bracket = FIFA.storage.getBracket();
+      let total = 0;
+
+      for (const m of FIFA.state.raw.matches.matches) {
+        if (m.status !== 'FINISHED') continue;
+        total += scoreMatch(preds[m.id], m.score.fullTime);
+
+        if (m.stage === 'FINAL' && bracket.champion) {
+          if (matchWinnerId(m) === bracket.champion) total += RULES.championBonus;
+        }
+        if (m.stage === 'THIRD_PLACE' && bracket.thirdPlace) {
+          if (matchWinnerId(m) === bracket.thirdPlace) total += RULES.thirdPlaceBonus;
+        }
+      }
+      return total;
+    }
+
+    return { RULES, scoreMatch, matchWinnerId, totalPoints };
+  })();
+
+  /* ─── state ──────────────────────────────────────────────── */
+  FIFA.state = {
+    raw: null,        // { teams, matches, standings, fetchedAt }
+    view: 'groups',
+  };
+
+  /* ─── helpers ────────────────────────────────────────────── */
+  FIFA.fmt = {
+    /** "2026-06-11T19:00:00Z" -> "Thu Jun 11 · 7:00 PM" (local TZ) */
+    matchDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleString(undefined, {
+        weekday: 'short', month: 'short', day: 'numeric',
+      }) + ' · ' + d.toLocaleTimeString(undefined, {
+        hour: 'numeric', minute: '2-digit',
+      });
+    },
+    countdown(toIso) {
+      const ms = new Date(toIso) - new Date();
+      if (ms <= 0) return 'live now';
+      const d = Math.floor(ms / 86_400_000);
+      const h = Math.floor((ms % 86_400_000) / 3_600_000);
+      const m = Math.floor((ms %  3_600_000) /    60_000);
+      if (d > 0) return `${d}d ${h}h`;
+      if (h > 0) return `${h}h ${m}m`;
+      return `${m}m`;
+    },
+    fetchedAt(iso) {
+      try {
+        const d = new Date(iso);
+        return 'Snapshot from ' + d.toLocaleString(undefined, {
+          dateStyle: 'medium', timeStyle: 'short',
+        });
+      } catch { return 'Snapshot timestamp unknown'; }
+    },
+    groupLetter(apiGroup) {
+      // "GROUP_A" -> "A"
+      return apiGroup && apiGroup.startsWith('GROUP_') ? apiGroup.slice(6) : apiGroup;
+    },
+  };
+
+  /* ─── UI: groups view ────────────────────────────────────── */
+  FIFA.ui = {};
+
+  FIFA.ui.groups = function renderGroups(root) {
+    const { matches, standings } = FIFA.state.raw;
+
+    // Bucket group-stage matches by group letter.
+    const matchesByGroup = {};
+    for (const m of matches.matches) {
+      if (m.stage !== 'GROUP_STAGE') continue;
+      const letter = FIFA.fmt.groupLetter(m.group);
+      (matchesByGroup[letter] ||= []).push(m);
+    }
+    for (const list of Object.values(matchesByGroup)) {
+      list.sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'groups';
+
+    // standings is an array of group objects (Group A…L).
+    for (const g of standings.standings) {
+      const letter = (g.group || '').replace(/^Group\s+/i, '');
+      grid.appendChild(groupCard(letter, g.table, matchesByGroup[letter] || []));
+    }
+
+    root.replaceChildren(grid);
+  };
+
+  function groupCard(letter, table, fixtures) {
+    const card = document.createElement('section');
+    card.className = 'group';
+    card.setAttribute('aria-label', `Group ${letter}`);
+
+    card.innerHTML = `
+      <header class="group__head">
+        <h3 class="group__name">Group <span>${letter}</span></h3>
+        <span class="group__matchday">${fixtures.length} matches</span>
+      </header>
+      <table class="table">
+        <colgroup>
+          <col class="col-team">
+          <col class="col-stat">
+          <col class="col-stat">
+          <col class="col-pts">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Team</th>
+            <th title="Played">P</th>
+            <th title="Goal difference">GD</th>
+            <th title="Points">Pts</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${table.map(row => `
+            <tr data-pos="${row.position}">
+              <td>
+                <span class="team">
+                  <img src="${row.team.crest}" alt="" loading="lazy">
+                  <span class="team__name" title="${row.team.name}">${row.team.shortName || row.team.name}</span>
+                </span>
+              </td>
+              <td>${row.playedGames}</td>
+              <td>${row.goalDifference > 0 ? '+' : ''}${row.goalDifference}</td>
+              <td class="pts">${row.points}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div class="fixtures">
+        ${fixtures.map(fixtureRow).join('')}
+      </div>
+    `;
+    return card;
+  }
+
+  function fixtureRow(m) {
+    const finished   = m.status === 'FINISHED';
+    const live       = m.status === 'IN_PLAY' || m.status === 'PAUSED';
+    const teamsKnown = m.homeTeam.id != null && m.awayTeam.id != null;
+    const editable   = !finished && !live && teamsKnown;
+    const pred = FIFA.storage.get(m.id);
+
+    // Matchup center: real or "vs". The picker is NOT here — it lives in its own row.
+    const center = (finished || live)
+      ? `<span class="fixture__vs score">${m.score.fullTime.home ?? 0}–${m.score.fullTime.away ?? 0}</span>`
+      : `<span class="fixture__vs">vs</span>`;
+
+    // Pick row below the matchup.
+    let pickRow = '';
+    if (editable) {
+      pickRow = `
+        <div class="fixture__pick fixture__pick--inputs">
+          ${pickerInputHtml('home', pred?.home)}
+          <span class="fixture__pick-label">Your pick</span>
+          ${pickerInputHtml('away', pred?.away)}
+        </div>`;
+    } else if (finished) {
+      if (pred) {
+        const pts = FIFA.scoring.scoreMatch(pred, m.score.fullTime);
+        const cls = pts === FIFA.scoring.RULES.exact ? 'is-exact'
+                  : pts > 0                         ? 'is-positive' : '';
+        pickRow = `
+          <div class="fixture__pick ${cls}">
+            <span class="fixture__pick-label">Your pick</span>
+            <span class="fixture__pick-value">${pred.home}–${pred.away}</span>
+            <span class="fixture__pick-pts">+${pts} PTS</span>
+          </div>`;
+      } else {
+        pickRow = `
+          <div class="fixture__pick">
+            <span class="fixture__pick-label">No pick</span>
+            <span class="fixture__pick-pts">+0 PTS</span>
+          </div>`;
+      }
+    } else if (!teamsKnown) {
+      pickRow = `
+        <div class="fixture__pick fixture__pick--locked">
+          Picks unlock when teams advance
+        </div>`;
+    }
+
+    const tbdClass = teamsKnown ? '' : 'is-tbd';
+
+    return `
+      <div class="fixture ${tbdClass}" data-status="${m.status}" data-match-id="${m.id}">
+        <div class="fixture__when">${FIFA.fmt.matchDate(m.utcDate)}</div>
+        <div class="fixture__matchup">
+          <span class="fixture__side">
+            <img src="${m.homeTeam.crest || 'soccerball.jpg'}" alt="" loading="lazy">
+            <span class="fixture__tla" title="${m.homeTeam.name || 'TBD'}">${m.homeTeam.tla || 'TBD'}</span>
+          </span>
+          ${center}
+          <span class="fixture__side fixture__side--away">
+            <img src="${m.awayTeam.crest || 'soccerball.jpg'}" alt="" loading="lazy">
+            <span class="fixture__tla" title="${m.awayTeam.name || 'TBD'}">${m.awayTeam.tla || 'TBD'}</span>
+          </span>
+        </div>
+        ${pickRow}
+      </div>
+    `;
+  }
+
+  function pickerInputHtml(side, value) {
+    const isSet = value != null;
+    return `<input
+      class="picker-input ${isSet ? 'is-set' : ''}"
+      type="number"
+      min="0" max="15"
+      step="1"
+      inputmode="numeric"
+      placeholder="—"
+      data-side="${side}"
+      aria-label="${side} score prediction"
+      value="${isSet ? value : ''}"
+    >`;
+  }
+
+  function updatePoints() {
+    const pts = FIFA.scoring.totalPoints();
+    document.getElementById('points').textContent = pts === 0 ? '—' : pts;
+  }
+
+  /* Event delegation: score input changes anywhere in the doc. */
+  function handlePickerInput(e) {
+    const input = e.target.closest('.picker-input');
+    if (!input) return;
+    const fixture = input.closest('.fixture');
+    if (!fixture) return;
+    const status = fixture.dataset.status;
+    if (status !== 'TIMED' && status !== 'SCHEDULED') return;
+
+    const matchId = +fixture.dataset.matchId;
+    const side    = input.dataset.side;          // 'home' | 'away'
+
+    // Parse + clamp.
+    const raw = input.value.trim();
+    let v = null;
+    if (raw !== '') {
+      v = parseInt(raw, 10);
+      if (Number.isNaN(v)) v = null;
+      else v = Math.max(0, Math.min(15, v));
+      if (v != null && String(v) !== raw) input.value = v;  // normalize display
+    }
+
+    const cur = FIFA.storage.get(matchId) || { home: null, away: null };
+    cur[side] = v;
+
+    if (cur.home == null && cur.away == null) {
+      FIFA.storage.set(matchId, null);            // both cleared → drop entry
+    } else {
+      FIFA.storage.set(matchId, cur);
+    }
+
+    input.classList.toggle('is-set', v != null);
+    updatePoints();
+  }
+
+  /* ─── UI: bracket view ───────────────────────────────────── */
+  const STAGE_ORDER  = ['LAST_32', 'LAST_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'THIRD_PLACE', 'FINAL'];
+  const STAGE_LABELS = {
+    LAST_32: 'Round of 32', LAST_16: 'Round of 16',
+    QUARTER_FINALS: 'Quarter-Finals', SEMI_FINALS: 'Semi-Finals',
+    THIRD_PLACE: '3rd-Place Match', FINAL: 'Final',
+  };
+
+  FIFA.ui.bracket = function renderBracket(root) {
+    const { matches, teams } = FIFA.state.raw;
+
+    // Bucket non-group matches by stage, chronological within each.
+    const byStage = {};
+    for (const m of matches.matches) {
+      if (m.stage === 'GROUP_STAGE') continue;
+      (byStage[m.stage] ||= []).push(m);
+    }
+    for (const list of Object.values(byStage)) {
+      list.sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
+    }
+
+    const allTeams = [...teams.teams].sort((a, b) => a.name.localeCompare(b.name));
+
+    const html = `
+      <div class="bracket">
+        ${finalsPickerHtml(allTeams)}
+        ${STAGE_ORDER.map(s => stageSectionHtml(s, byStage[s] || [])).join('')}
+      </div>
+    `;
+    root.innerHTML = html;
+  };
+
+  function finalsPickerHtml(allTeams) {
+    const bracket = FIFA.storage.getBracket();
+    const championOptions  = teamOptionsHtml(allTeams, bracket.champion);
+    const thirdOptions     = teamOptionsHtml(allTeams, bracket.thirdPlace);
+    const championCrest    = teamCrestUrl(allTeams, bracket.champion);
+    const thirdCrest       = teamCrestUrl(allTeams, bracket.thirdPlace);
+    return `
+      <section class="finals-pick">
+        <h2 class="finals-pick__title">Your Final Picks</h2>
+        <p class="finals-pick__sub">Lock in who lifts the trophy — and who limps to bronze. Picks save instantly.</p>
+        <div class="finals-pick__grid">
+          <div class="finals-pick__slot finals-pick__slot--champion">
+            <span class="finals-pick__label">Champion <span class="finals-pick__bonus">+10 PTS</span></span>
+            <div class="finals-pick__row">
+              <img class="finals-pick__crest" ${championCrest ? `src="${championCrest}"` : ''} alt="">
+              <select class="team-select ${bracket.champion ? '' : 'is-empty'}" data-bracket-key="champion">
+                <option value="">— Pick a team —</option>
+                ${championOptions}
+              </select>
+            </div>
+          </div>
+          <div class="finals-pick__slot">
+            <span class="finals-pick__label">3rd Place <span class="finals-pick__bonus">+5 PTS</span></span>
+            <div class="finals-pick__row">
+              <img class="finals-pick__crest" ${thirdCrest ? `src="${thirdCrest}"` : ''} alt="">
+              <select class="team-select ${bracket.thirdPlace ? '' : 'is-empty'}" data-bracket-key="thirdPlace">
+                <option value="">— Pick a team —</option>
+                ${thirdOptions}
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
+  function teamOptionsHtml(allTeams, selectedId) {
+    return allTeams.map(t =>
+      `<option value="${t.id}" ${selectedId === t.id ? 'selected' : ''}>${t.name}</option>`
+    ).join('');
+  }
+
+  function teamCrestUrl(allTeams, id) {
+    if (id == null) return '';
+    const t = allTeams.find(x => x.id === id);
+    return t?.crest || '';
+  }
+
+  function stageSectionHtml(stage, list) {
+    const modCls = stage === 'FINAL'       ? 'stage--final'
+                 : stage === 'THIRD_PLACE' ? 'stage--third' : '';
+    return `
+      <section class="stage ${modCls}">
+        <header class="stage__head">
+          <h3 class="stage__name">${STAGE_LABELS[stage] || stage}</h3>
+          <span class="stage__count">${list.length} ${list.length === 1 ? 'match' : 'matches'}</span>
+        </header>
+        <div class="stage__matches">
+          ${list.map(fixtureRow).join('')}
+        </div>
+      </section>
+    `;
+  }
+
+  /* Bracket select handler — fires on <select> change. */
+  function handleBracketChange(e) {
+    const sel = e.target.closest('.team-select');
+    if (!sel) return;
+    const key = sel.dataset.bracketKey;
+    if (!key) return;
+
+    const val = sel.value === '' ? null : +sel.value;
+    const bracket = FIFA.storage.getBracket();
+    if (val == null) delete bracket[key];
+    else             bracket[key] = val;
+    FIFA.storage.setBracket(bracket);
+
+    // Live-update the adjacent crest + the empty/styled state.
+    sel.classList.toggle('is-empty', val == null);
+    const crest = sel.parentElement.querySelector('.finals-pick__crest');
+    const allTeams = FIFA.state.raw.teams.teams;
+    const url = teamCrestUrl(allTeams, val);
+    if (crest) {
+      if (url) crest.setAttribute('src', url);
+      else     crest.removeAttribute('src');
+    }
+    updatePoints();
+  }
+  /* ─── UI: My Picks view ──────────────────────────────────── */
+  FIFA.ui.picks = function renderPicks(root) {
+    const filter = FIFA.state.picksFilter || 'all';
+    const { matches, teams } = FIFA.state.raw;
+    const preds   = FIFA.storage.getAll();
+    const bracket = FIFA.storage.getBracket();
+
+    const teamById = new Map(teams.teams.map(t => [t.id, t]));
+    const championTeam = bracket.champion   ? teamById.get(bracket.champion)   : null;
+    const thirdTeam    = bracket.thirdPlace ? teamById.get(bracket.thirdPlace) : null;
+    const totalPicks   = Object.keys(preds).length;
+
+    // Build the pick list: every match the user has a prediction for, plus
+    // any FINISHED match they could have picked (so "no pick" shows as a 0).
+    const items = [];
+    for (const m of matches.matches) {
+      const pred = preds[m.id];
+      if (!pred && m.status !== 'FINISHED') continue;
+      items.push({ m, pred });
+    }
+    items.sort((a, b) => new Date(a.m.utcDate) - new Date(b.m.utcDate));
+
+    const filtered = items.filter(({ m }) =>
+      filter === 'all' ? true
+      : filter === 'groups' ? m.stage === 'GROUP_STAGE'
+      : m.stage !== 'GROUP_STAGE'
+    );
+
+    root.innerHTML = `
+      <div class="picks">
+        <header class="picks__head">
+          <h2 class="picks__title">My Picks</h2>
+          <div class="picks__stats">
+            <span class="picks__stat">${totalPicks} match pick${totalPicks === 1 ? '' : 's'}</span>
+            <span class="picks__stat">
+              ${championTeam
+                ? `<img src="${championTeam.crest}" alt=""> Champion: <strong>${championTeam.tla}</strong>`
+                : 'No champion pick'}
+            </span>
+            <span class="picks__stat">
+              ${thirdTeam
+                ? `<img src="${thirdTeam.crest}" alt=""> 3rd: <strong>${thirdTeam.tla}</strong>`
+                : 'No 3rd-place pick'}
+            </span>
+          </div>
+          <div class="picks__actions">
+            <button class="btn" data-action="export">Export</button>
+            <button class="btn" data-action="import">Import</button>
+            <button class="btn btn--primary" data-action="share">Share URL</button>
+            <button class="btn btn--danger"  data-action="reset">Reset All</button>
+          </div>
+        </header>
+
+        <div class="picks__filters" role="tablist">
+          ${['all','groups','ko'].map(f => `
+            <button class="filter-chip" data-filter="${f}" ${filter === f ? 'aria-current="true"' : ''}>
+              ${f === 'all' ? 'All' : f === 'groups' ? 'Group Stage' : 'Knockouts'}
+            </button>
+          `).join('')}
+        </div>
+
+        <div class="picks__list">
+          ${filtered.length === 0
+            ? `<div class="picks__empty">No picks yet. Head to Groups or Bracket to make some.</div>`
+            : filtered.map(({m, pred}) => pickItemHtml(m, pred)).join('')}
+        </div>
+      </div>
+    `;
+  };
+
+  function pickItemHtml(m, pred) {
+    const finished = m.status === 'FINISHED';
+    const homeTla = m.homeTeam.tla || 'TBD';
+    const awayTla = m.awayTeam.tla || 'TBD';
+    const when = FIFA.fmt.matchDate(m.utcDate);
+
+    let pickStr = pred ? `${pred.home}–${pred.away}` : 'No pick';
+    let ptsStr  = '—';
+    let cls     = '';
+
+    if (finished) {
+      const pts = pred ? FIFA.scoring.scoreMatch(pred, m.score.fullTime) : 0;
+      ptsStr = `+${pts} PTS`;
+      cls = pts === FIFA.scoring.RULES.exact ? 'is-exact'
+          : pts > 0                          ? 'is-positive' : '';
+    } else {
+      ptsStr = 'Pending';
+    }
+
+    const pickCls = pred ? '' : 'pick-item__pick--none';
+
+    return `
+      <div class="pick-item ${cls}">
+        <span class="pick-item__when">${when}</span>
+        <span class="pick-item__matchup">
+          <img src="${m.homeTeam.crest || 'soccerball.jpg'}" alt="">
+          <span class="pick-item__tla">${homeTla}</span>
+          <span class="pick-item__sep">vs</span>
+          <img src="${m.awayTeam.crest || 'soccerball.jpg'}" alt="">
+          <span class="pick-item__tla">${awayTla}</span>
+        </span>
+        <span class="pick-item__pick ${pickCls}">${pickStr}</span>
+        <span class="pick-item__pts">${ptsStr}</span>
+      </div>
+    `;
+  }
+
+  /* ─── Picks: actions (export / import / share / reset) ────── */
+  FIFA.actions = (() => {
+    function snapshot() {
+      return {
+        v: 1,
+        predictions: FIFA.storage.getAll(),
+        bracket:     FIFA.storage.getBracket(),
+      };
+    }
+
+    function applySnapshot(snap) {
+      if (!snap || snap.v !== 1) throw new Error('Unrecognized backup version');
+      // Replace everything wholesale (predictions object + bracket object).
+      Object.keys(FIFA.storage.getAll()).forEach(k => FIFA.storage.set(k, null));
+      for (const [id, p] of Object.entries(snap.predictions || {})) {
+        FIFA.storage.set(id, p);
+      }
+      FIFA.storage.setBracket(snap.bracket || {});
+    }
+
+    function exportJson() {
+      const data = snapshot();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const ts = new Date().toISOString().slice(0, 10);
+      a.download = `fifa-picks-${ts}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      toast('Exported');
+    }
+
+    function importJson() {
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = 'application/json,.json';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+          if (!confirm('Replace all current picks with the imported ones?')) return;
+          applySnapshot(data);
+          showView('picks');
+          updatePoints();
+          toast('Imported');
+        } catch (err) {
+          toast('Import failed: ' + err.message, true);
+        }
+      };
+      input.click();
+    }
+
+    async function share() {
+      const data = snapshot();
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+      const url = location.origin + location.pathname + '#share=' + encoded;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast('Share URL copied to clipboard');
+      } catch {
+        // Clipboard blocked — drop into the URL bar so user can copy manually.
+        location.hash = 'share=' + encoded;
+        toast('URL updated — copy from address bar', true);
+      }
+    }
+
+    function resetAll() {
+      if (!confirm('Wipe ALL picks (match scores + champion + 3rd place)? This can\'t be undone unless you exported a backup.')) return;
+      Object.keys(FIFA.storage.getAll()).forEach(k => FIFA.storage.set(k, null));
+      FIFA.storage.setBracket({});
+      showView('picks');
+      updatePoints();
+      toast('All picks cleared');
+    }
+
+    /** Try to import from a #share=... URL hash, if present. */
+    function maybeImportFromHash() {
+      const hash = location.hash || '';
+      const m = hash.match(/^#share=(.+)$/);
+      if (!m) return false;
+      try {
+        const data = JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+        if (data.v !== 1) throw new Error('Unsupported version');
+        const ok = confirm('Import the shared picks from this link? This will replace your current picks.');
+        history.replaceState(null, '', location.pathname + location.search);
+        if (!ok) return false;
+        applySnapshot(data);
+        return true;
+      } catch (err) {
+        console.warn('share import failed', err);
+        history.replaceState(null, '', location.pathname + location.search);
+        return false;
+      }
+    }
+
+    return { exportJson, importJson, share, resetAll, maybeImportFromHash };
+  })();
+
+  /* Click handler for the picks-view action bar + filter chips. */
+  function handlePicksClick(e) {
+    const actionBtn = e.target.closest('.picks__actions [data-action]');
+    if (actionBtn) {
+      const a = actionBtn.dataset.action;
+      if (a === 'export') FIFA.actions.exportJson();
+      else if (a === 'import') FIFA.actions.importJson();
+      else if (a === 'share')  FIFA.actions.share();
+      else if (a === 'reset')  FIFA.actions.resetAll();
+      return;
+    }
+    const filterBtn = e.target.closest('.picks__filters [data-filter]');
+    if (filterBtn) {
+      FIFA.state.picksFilter = filterBtn.dataset.filter;
+      showView('picks');
+    }
+  }
+
+  /* Lightweight toast for action feedback. */
+  let toastTimer = null;
+  function toast(msg, isError = false) {
+    let el = document.getElementById('toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'toast';
+      el.className = 'toast';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.classList.toggle('toast--error', !!isError);
+    requestAnimationFrame(() => el.classList.add('is-visible'));
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('is-visible'), 2400);
+  }
+
+  /* ─── view router ────────────────────────────────────────── */
+  function showView(name) {
+    FIFA.state.view = name;
+    document.querySelectorAll('.tab').forEach(t => {
+      if (t.dataset.view === name) t.setAttribute('aria-current', 'page');
+      else t.removeAttribute('aria-current');
+    });
+    const root = document.getElementById('view');
+    const fn = FIFA.ui[name];
+    if (fn) fn(root);
+  }
+
+  /* ─── boot ───────────────────────────────────────────────── */
+  async function boot() {
+    // Wire tabs first so they're interactive even if data fails.
+    document.querySelectorAll('.tab').forEach(t => {
+      t.addEventListener('click', () => showView(t.dataset.view));
+    });
+
+    // Score-picker inputs — one delegated listener for the whole app.
+    document.addEventListener('input',  handlePickerInput);
+    // Bracket dropdowns (Champion, 3rd Place).
+    document.addEventListener('change', handleBracketChange);
+    // Picks-view actions + filter chips.
+    document.addEventListener('click',  handlePicksClick);
+
+    // Help modal — open via header button, close via backdrop / X / Escape.
+    const helpModal = document.getElementById('help-modal');
+    document.getElementById('help-btn').addEventListener('click', () => {
+      helpModal.classList.add('is-open');
+      helpModal.setAttribute('aria-hidden', 'false');
+    });
+    function closeHelp() {
+      helpModal.classList.remove('is-open');
+      helpModal.setAttribute('aria-hidden', 'true');
+    }
+    helpModal.addEventListener('click', e => {
+      if (e.target === helpModal || e.target.closest('[data-close-help]')) closeHelp();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && helpModal.classList.contains('is-open')) closeHelp();
+    });
+
+    // Countdown — independent of data.
+    const tickCountdown = () => {
+      document.getElementById('countdown').textContent =
+        FIFA.fmt.countdown(FIFA.config.openingMatchUTC);
+    };
+    tickCountdown();
+    setInterval(tickCountdown, 60_000);
+
+    try {
+      FIFA.state.raw = await FIFA.data.loadAll();
+      document.getElementById('fetched-at').textContent =
+        FIFA.fmt.fetchedAt(FIFA.state.raw.fetchedAt.iso);
+
+      // If the URL has a #share=... payload, prompt to import before rendering.
+      const imported = FIFA.actions.maybeImportFromHash();
+
+      updatePoints();
+      showView(imported ? 'picks' : 'groups');
+    } catch (err) {
+      document.getElementById('view').innerHTML = `
+        <div class="status-wrap error">
+          <div><strong>Couldn't load tournament data.</strong></div>
+          <div style="margin-top:6px">${err.message}</div>
+          <code>./scripts/fetch.sh</code>
+        </div>`;
+      console.error(err);
+    }
+  }
+
+  boot();
+  </script>
+</body>
+</html>
